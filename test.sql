@@ -1,0 +1,7 @@
+/*
+SHOW DATABASES;
+
+USE telecom;
+SHOW TABLES;
+*/
+
