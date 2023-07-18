@@ -67,8 +67,8 @@ SHOW TABLES;
 | TERMINAL_LEVEL | `int` |  | 1,2,3,4,5 | hs_cdma_layer ? |
 | TERMINAL_PRICE | `int` | cellphone's price |  | hs_cdma_ter_price |
 | HS_CDMA_CT_DATE | `varchar(20)` | when the users start their services? |  | hs_cdma_ct_date |
-| PD_EVDO_FLAG | `varchar(1)` | wheter to use 4G wireless network |  | pd_evdo_flag_m1 |
-| PD_1X_FLAG | `varchar(1)` | wheter the use 1x wireless network |  | pd_1x_flag_m1 |        
+| PD_EVDO_FLAG | `varchar(1)` | wheter to use EVDO wireless network |  | pd_evdo_flag_m1 |
+| PD_1X_FLAG | `varchar(1)` | wheter the use ONEX wireless network |  | pd_1x_flag_m1 |        
 | ARPU | `float` | user average fee |  | mb_arpu_cdma_m1 | 
 | ARPU_ALL | `float` | ARPU includes reconciliation |  | mb_arpu_cdma_all_m1 |    
 | CONTRACT_FLAG | `varchar(1)` | wheter there is an agreement | | pl_contract_flag |
@@ -90,18 +90,6 @@ LIMIT 3;
 | a2nl3ojo | 6twk3n3s | 201308   | 51-06-26-1981-01-02-1 | 德阳市市辖区       |           1 |            0 |          0 | 中兴           | 中兴-N600(3G)      |                   1 | 3G            |              3 |            899 | 2011/6/11 13:02:54 | 1            | 0          |  0.1 |      0.1 | 0             |                  NULL |        28.75 |        0.43 |
 | 90893o09 | mm7pjcxf | 201308   | 51-06-02-1947-06-05-0 | 德阳市市辖区       |           1 |            0 |          0 | 华立时代       | 华立时代-LC101     |                   0 | 1X            |              2 |            330 | 2011/6/11 16:02:55 | 0            | 0          |    8 |        8 | 0             |                  NULL |         11.5 |           0 |
 +----------+----------+----------+-----------------------+--------------------+-------------+--------------+------------+----------------+--------------------+---------------------+---------------+----------------+----------------+--------------------+--------------+------------+------+----------+---------------+-----------------------+--------------+-------------+
-*/
-
-SELECT
-    COUNT(*)
-FROM
-    sample_user_201308;
-/*
-+----------+
-| COUNT(*) |
-+----------+
-|   384490 |
-+----------+
 */
 ```
 
@@ -186,7 +174,7 @@ GROUP BY
 
 
 SELECT
-    TERMINAL_SMART_FLAG, COUNT(*) 
+    TERMINAL_SMART_FLAGCOUNT(*) 
 FROM
     sample_user_201308 
 GROUP BY
@@ -236,6 +224,33 @@ ORDER BY
 */
 
 SELECT
+    MAX(TERMINAL_PRICE), decile
+FROM(
+     SELECT
+         TERMINAL_PRICE,
+         NTILE(10) OVER (ORDER BY TERMINAL_PRICE) AS decile
+    FROM sample_user_201308
+) subquery
+WHERE decile <> 10
+GROUP BY
+    decile;
+/*
++---------------------+--------+
+| MAX(TERMINAL_PRICE) | decile |
++---------------------+--------+
+|                 199 |      1 |
+|                 299 |      2 |
+|                 399 |      3 |
+|                 599 |      4 |
+|                 699 |      5 |
+|                 838 |      6 |
+|                 990 |      7 |
+|                1090 |      8 |
+|                1590 |      9 |
++---------------------+--------+
+*/
+
+SELECT
     PD_EVDO_FLAG, COUNT(*) 
 FROM
     sample_user_201308 
@@ -249,7 +264,6 @@ GROUP BY
 | 0            |   160294 |
 +--------------+----------+
 */
-
 
 SELECT
     PD_1X_FLAG, COUNT(*) 
@@ -265,9 +279,167 @@ GROUP BY
 | 0          |   317842 |
 +------------+----------+
 */
+
+SELECT
+    MAX(ARPU), decile
+FROM(
+     SELECT
+         ARPU,
+         NTILE(10) OVER (ORDER BY ARPU) AS decile
+    FROM sample_user_201308
+) subquery
+GROUP BY
+    decile;
+/*
++-----------+--------+
+| MAX(ARPU) | decile |
++-----------+--------+
+|         0 |      1 |
+|         6 |      2 |
+|      13.5 |      3 |
+|        26 |      4 |
+|        31 |      5 |
+|        40 |      6 |
+|        53 |      7 |
+|      63.5 |      8 |
+|     85.66 |      9 |
+|   1934.57 |     10 |
++-----------+--------+
+*/
+
+
+SELECT
+    MAX(ARPU_ALL), decile
+FROM(
+     SELECT
+         ARPU_ALL,
+         NTILE(10) OVER (ORDER BY ARPU_ALL) AS decile
+    FROM sample_user_201308
+) subquery
+GROUP BY
+    decile;
+/*
++---------------+--------+
+| MAX(ARPU_ALL) | decile |
++---------------+--------+
+|             0 |      1 |
+|          0.75 |      2 |
+|          7.38 |      3 |
+|         16.09 |      4 |
+|            26 |      5 |
+|         34.72 |      6 |
+|         43.56 |      7 |
+|            59 |      8 |
+|         74.47 |      9 |
+|       1783.94 |     10 |
++---------------+--------+
+*/
+
+
+SELECT
+    CONTRACT_FLAG, COUNT(*) 
+FROM
+    sample_user_201308 
+GROUP BY
+    CONTRACT_FLAG;
+/*
++---------------+----------+
+| CONTRACT_FLAG | COUNT(*) |
++---------------+----------+
+| 0             |   307529 |
+| 1             |    76961 |
++---------------+----------+
+*/
+
+SELECT
+    MAX(CONTRACT_EXPIRE_MONTH), quartile
+FROM(
+     SELECT
+         CONTRACT_EXPIRE_MONTH,
+         NTILE(4) OVER (ORDER BY CONTRACT_EXPIRE_MONTH) AS quartile
+    FROM sample_user_201308
+) subquery
+GROUP BY
+    quartile;
+/*
++----------------------------+----------+
+| MAX(CONTRACT_EXPIRE_MONTH) | quartile |
++----------------------------+----------+
+|                       NULL |        1 |
+|                       NULL |        2 |
+|                       NULL |        3 |
+|                         47 |        4 |
++----------------------------+----------+
+*/
+
+SELECT
+    MAX(VO_MOU_LOCAL), decile
+FROM(
+     SELECT
+         VO_MOU_LOCAL,
+         NTILE(10) OVER (ORDER BY VO_MOU_LOCAL) AS decile
+    FROM sample_user_201308
+) subquery
+GROUP BY
+    decile;
+/*
++-------------------+--------+
+| MAX(VO_MOU_LOCAL) | decile |
++-------------------+--------+
+|                 0 |      1 |
+|              0.45 |      2 |
+|              4.77 |      3 |
+|             12.92 |      4 |
+|             25.05 |      5 |
+|             42.12 |      6 |
+|              66.8 |      7 |
+|            106.27 |      8 |
+|             185.3 |      9 |
+|           11619.8 |     10 |
++-------------------+--------+
+*/
+
+SELECT
+    MAX(VO_MOU_DIST), decile
+FROM(
+     SELECT
+         VO_MOU_DIST,
+         NTILE(10) OVER (ORDER BY VO_MOU_DIST) AS decile
+    FROM sample_user_201308
+) subquery
+GROUP BY
+    decile;
+/*
++------------------+--------+
+| MAX(VO_MOU_DIST) | decile |
++------------------+--------+
+|                0 |      1 |
+|                0 |      2 |
+|                0 |      3 |
+|                0 |      4 |
+|             0.57 |      5 |
+|              3.5 |      6 |
+|            10.13 |      7 |
+|            24.58 |      8 |
+|            62.35 |      9 |
+|           8136.4 |     10 |
++------------------+--------+
+*/
 ```
 
 ## More
 - tables: tb_asz_cdma_0838_{month}
+```sql
+SELECT
+    (SELECT COUNT(*) FROM sample_user_201308) AS sample_user,
+    (SELECT COUNT(*) FROM tb_asz_cdma_0838_201308) AS tb_asz_cdma_0838;
+/*
++-------------+------------------+
+| sample_user | tb_asz_cdma_0838 |
++-------------+------------------+
+|      384490 |           591218 |
++-------------+------------------+
+*/
+```
 
 ### column names(keys of table)
