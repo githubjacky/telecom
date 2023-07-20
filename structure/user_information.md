@@ -38,43 +38,44 @@ SHOW TABLES;
 ```
 
 ## Terminology
-- [CDMA](https://en.wikipedia.org/wiki/Code-division_multiple_access): Code-division multiple access
+- [CDMA](https://www.techtarget.com/searchnetworking/definition/CDMA-Code-Division-Multiple-Access#:~:text=CDMA%20\(Code%2DDivision%20Multiple%20Access\)%20refers%20to%20any%20of,the%20use%20of%20available%20bandwidth.): Code-division multiple access
 - [CDMA2000](https://zh.wikipedia.org/zh-tw/CDMA2000)
 - [EVDO](https://en.wikipedia.org/wiki/Evolution-Data_Optimized): Evolution-Data Optimized
 - ONEX: 1X
 
 - ARPU: monthly average revenu per unit
-- [MOU](https://www.docomo.ne.jp/english/corporate/ir/binary/pdf/library/presentation/060428/p33_e.pdf): miniuted of usage
+- [MOU](https://www.docomo.ne.jp/english/corporate/ir/binary/pdf/library/presentation/060428/p33_e.pdf): miniutes of usage
 
-## Basic
-- tables: sample_user_{month}
 
-### column names(keys of table)
+- table: sample_user_{month}
+## column names(keys of table)
 | columns | type | explanations | examples | variable name in user_account_information |
 | --- | --- | --- | --- | --- | 
 | SERV_ID | `varchar(8)` | user ID |  | serv_id |
 | MSISDN | `varchar(64)` | cellphone number |  | msisdn |
-| MONTH_NO | `varchar(6)` | which month |  | month_no |
+| [MONTH_NO](#MONTH_NO) | `varchar(6)` | which month |  | month_no |
 | CERT_NBR | `varchar(255)` | identity numbr |  | cert_nbr |         
-| CI_BRANCH | `varchar(255)` | branch office | 德阳市市辖区, 广汉市 | ci_branch |
-| EMPLOY_FLAG | `int` |  |  | is_zqhy ? | 
-| STUDENT_FLAG | `int` |  |  | is_school ? |  
-| RURAL_FLAG | `int` |  |  | bss_org_zj_flag ? |
+| [CI_BRANCH](#CI_BRANCH) | `varchar(255)` | branch office | 德阳市市辖区, 广汉市 | ci_branch |
+| [EMPLOY_FLAG](#flag1) | `int` |  |  | is_zqhy ? | 
+| [STUDENT_FLAG](#flag1) | `int` |  |  | is_school ? |  
+| [RURAL_FLAG](#flag1) | `int` |  |  | bss_org_zj_flag ? |
 | TERMINAL_BRAND | `varchar(255)` | cellphone's brand | SAMSUNG | hs_cdma_brand |
 | TERMINAL_MODEL | `varchar(255)` | cellphone's model | SAMSUNG-B189 | hs_cdma_model |
-| TERMINAL_SMART_FLAG | `int` | wheter the cellphone is a smartphone |  | is_intelligent |
-| TERMINAL_TYPE | `varchar(8)` |  | 1X, 3G | terminal_type |
-| TERMINAL_LEVEL | `int` |  | 1,2,3,4,5 | hs_cdma_layer ? |
-| TERMINAL_PRICE | `int` | cellphone's price |  | hs_cdma_ter_price |
+| [TERMINAL_SMART_FLAG](#terminal_info) | `int` | wheter the cellphone is a smartphone |  | is_intelligent |
+| [TERMINAL_TYPE](#terminal_info) | `varchar(8)` |  | 1X, 3G | terminal_type |
+| [TERMINAL_LEVEL](#terminal_info) | `int` |  | 1,2,3,4,5 | hs_cdma_layer ? |
+| [TERMINAL_PRICE](#terminal_info) | `int` | cellphone's price |  | hs_cdma_ter_price |
 | HS_CDMA_CT_DATE | `varchar(20)` | when the users start their services? |  | hs_cdma_ct_date |
-| PD_EVDO_FLAG | `varchar(1)` | wheter to use EVDO wireless network |  | pd_evdo_flag_m1 |
-| PD_1X_FLAG | `varchar(1)` | wheter the use ONEX wireless network |  | pd_1x_flag_m1 |        
-| ARPU | `float` | user average fee |  | mb_arpu_cdma_m1 | 
-| ARPU_ALL | `float` | ARPU includes reconciliation |  | mb_arpu_cdma_all_m1 |    
-| CONTRACT_FLAG | `varchar(1)` | wheter there is an agreement | | pl_contract_flag |
-| CONTRACT_EXPIRE_MONTH | `int` | the number of months due from the agreement |  | pl_expire_month |
-| VO_MOU_LOCAL | `float` | MOU of local | 0.45, 28.75, 176.08 | vo_cdma_mouout_local_m1 |
-| VO_MOU_DIST | `float` | MOU of long distance | 0, 0.25, 37.55  | vo_cdma_mou_dist_m1 |
+| [PD_EVDO_FLAG](#speed) | `varchar(1)` | wheter to use EVDO wireless network |  | pd_evdo_flag_m1 |
+| [PD_1X_FLAG](#speed) | `varchar(1)` | wheter the use ONEX wireless network |  | pd_1x_flag_m1 |        
+| [ARPU](#ARPU) | `float` | user average fee |  | mb_arpu_cdma_m1 | 
+| [ARPU_ALL](#ARPU) | `float` | ARPU includes reconciliation |  | mb_arpu_cdma_all_m1 |    
+| [CONTRACT_FLAG](#contract) | `varchar(1)` | wheter there is an agreement | | pl_contract_flag |
+| [CONTRACT_EXPIRE_MONTH](#contract) | `int` | the number of months due from the agreement |  | pl_expire_month |
+| [VO_MOU_LOCAL](#mou) | `float` | MOU of local | 0.45, 28.75, 176.08 | vo_cdma_mouout_local_m1 |
+| [VO_MOU_DIST](#mou) | `float` | MOU of long distance | 0, 0.25, 37.55  | vo_cdma_mou_dist_m1 |
+
+
 
 ```sql
 SELECT
@@ -93,7 +94,8 @@ LIMIT 3;
 */
 ```
 
-```sql
+<a name="MONTH_NO"></a>
+```sql 
 SELECT DISTINCT
     MONTH_NO
 FROM
@@ -105,7 +107,11 @@ FROM
 | 201308   |
 +----------+
 */
+```
 
+
+<a name="CI_BRANCH"></a>
+```sql
 SELECT
     CI_BRANCH, COUNT(*) 
 FROM
@@ -125,7 +131,10 @@ GROUP BY
 | 德阳市未知营业区         |       97 |
 +--------------------------+----------+
 */
+```
 
+<a name="flag1"></a>
+```sql
 SELECT
     EMPLOY_FLAG, COUNT(*) 
 FROM
@@ -171,8 +180,11 @@ GROUP BY
 |          1 |   152272 |
 +------------+----------+
 */
+```
 
 
+<a name="terminal_info"></a>
+```sql
 SELECT
     TERMINAL_SMART_FLAGCOUNT(*) 
 FROM
@@ -225,13 +237,14 @@ ORDER BY
 
 SELECT
     MAX(TERMINAL_PRICE), decile
-FROM(
-     SELECT
-         TERMINAL_PRICE,
-         NTILE(10) OVER (ORDER BY TERMINAL_PRICE) AS decile
-    FROM sample_user_201308
+FROM
+(
+    SELECT
+        TERMINAL_PRICE,
+        NTILE(10) OVER (ORDER BY TERMINAL_PRICE) AS decile
+    FROM
+        sample_user_201308
 ) subquery
-WHERE decile <> 10
 GROUP BY
     decile;
 /*
@@ -247,9 +260,14 @@ GROUP BY
 |                 990 |      7 |
 |                1090 |      8 |
 |                1590 |      9 |
+|               10600 |     10 |
 +---------------------+--------+
 */
+```
 
+
+<a name="speed"></a>
+```sql
 SELECT
     PD_EVDO_FLAG, COUNT(*) 
 FROM
@@ -279,14 +297,20 @@ GROUP BY
 | 0          |   317842 |
 +------------+----------+
 */
+```
 
+
+<a name="ARPU"></a>
+```sql
 SELECT
     MAX(ARPU), decile
-FROM(
-     SELECT
-         ARPU,
-         NTILE(10) OVER (ORDER BY ARPU) AS decile
-    FROM sample_user_201308
+FROM
+(
+    SELECT
+        ARPU,
+        NTILE(10) OVER (ORDER BY ARPU) AS decile
+    FROM
+        sample_user_201308
 ) subquery
 GROUP BY
     decile;
@@ -310,10 +334,11 @@ GROUP BY
 
 SELECT
     MAX(ARPU_ALL), decile
-FROM(
+FROM
+(
      SELECT
-         ARPU_ALL,
-         NTILE(10) OVER (ORDER BY ARPU_ALL) AS decile
+        ARPU_ALL,
+        NTILE(10) OVER (ORDER BY ARPU_ALL) AS decile
     FROM sample_user_201308
 ) subquery
 GROUP BY
@@ -334,8 +359,10 @@ GROUP BY
 |       1783.94 |     10 |
 +---------------+--------+
 */
+```
 
-
+<a name="contract"></a>
+```sql
 SELECT
     CONTRACT_FLAG, COUNT(*) 
 FROM
@@ -353,11 +380,13 @@ GROUP BY
 
 SELECT
     MAX(CONTRACT_EXPIRE_MONTH), quartile
-FROM(
-     SELECT
-         CONTRACT_EXPIRE_MONTH,
-         NTILE(4) OVER (ORDER BY CONTRACT_EXPIRE_MONTH) AS quartile
-    FROM sample_user_201308
+FROM
+(
+    SELECT
+        CONTRACT_EXPIRE_MONTH,
+        NTILE(4) OVER (ORDER BY CONTRACT_EXPIRE_MONTH) AS quartile
+    FROM
+        sample_user_201308
 ) subquery
 GROUP BY
     quartile;
@@ -371,14 +400,19 @@ GROUP BY
 |                         47 |        4 |
 +----------------------------+----------+
 */
+```
 
+<a name="mou"></a>
+```sql
 SELECT
     MAX(VO_MOU_LOCAL), decile
-FROM(
-     SELECT
-         VO_MOU_LOCAL,
-         NTILE(10) OVER (ORDER BY VO_MOU_LOCAL) AS decile
-    FROM sample_user_201308
+FROM
+(
+    SELECT
+        VO_MOU_LOCAL,
+        NTILE(10) OVER (ORDER BY VO_MOU_LOCAL) AS decile
+    FROM
+        sample_user_201308
 ) subquery
 GROUP BY
     decile;
@@ -401,11 +435,13 @@ GROUP BY
 
 SELECT
     MAX(VO_MOU_DIST), decile
-FROM(
-     SELECT
-         VO_MOU_DIST,
-         NTILE(10) OVER (ORDER BY VO_MOU_DIST) AS decile
-    FROM sample_user_201308
+FROM
+(
+    SELECT
+        VO_MOU_DIST,
+        NTILE(10) OVER (ORDER BY VO_MOU_DIST) AS decile
+    FROM
+        sample_user_201308
 ) subquery
 GROUP BY
     decile;
@@ -427,19 +463,26 @@ GROUP BY
 */
 ```
 
-## More
-- tables: tb_asz_cdma_0838_{month}
+## More User Information(more complete as well)
+*check out table: tb_asz_cdma_0838_{month}*
 ```sql
 SELECT
-    (SELECT COUNT(*) FROM sample_user_201308) AS sample_user,
-    (SELECT COUNT(*) FROM tb_asz_cdma_0838_201308) AS tb_asz_cdma_0838;
+    'sample_user_201308' AS table_name,
+    COUNT(*) AS count_value
+FROM
+    sample_user_201308
+UNION
+SELECT
+    'tb_asz_cdma_0838_201308' AS table_name,
+    COUNT(*) AS count_value
+FROM
+    tb_asz_cdma_0838_201308;
 /*
-+-------------+------------------+
-| sample_user | tb_asz_cdma_0838 |
-+-------------+------------------+
-|      384490 |           591218 |
-+-------------+------------------+
++-------------------------+-------------+
+| table_name              | count_value |
++-------------------------+-------------+
+| sample_user_201308      |      384490 |
+| tb_asz_cdma_0838_201308 |      591218 |
++-------------------------+-------------+
 */
 ```
-
-### column names(keys of table)
