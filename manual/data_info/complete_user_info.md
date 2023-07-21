@@ -61,19 +61,21 @@ FROM
 +-------------------------+-------------+
 */
 ```
-
 ## terminology
 - [landline](https://en.wikipedia.org/wiki/landline#:~:text=a%20landline%20\(land%20line%2c%20land,radio%20waves%20for%20signal%20transmission.): telephone connection that uses metal wires or optical fiber telephone line
 
 - [CDMA](https://www.techtarget.com/searchnetworking/definition/CDMA-Code-Division-Multiple-Access#:~:text=CDMA%20\(Code%2DDivision%20Multiple%20Access\)%20refers%20to%20any%20of,the%20use%20of%20available%20bandwidth.): Code-division multiple access
 - [CDMA2000](https://zh.wikipedia.org/zh-tw/CDMA2000)
 - [EVDO](https://en.wikipedia.org/wiki/Evolution-Data_Optimized): Evolution-Data Optimized
-- ONEX: 1X
+- [ONEX](https://zhidao.baidu.com/question/481540439.html): 1X
+
+The difference between EVDO and ONEX flag is wheter the cellphone supoort the internet?
 
 - ARPU: monthly average revenu per unit
-- [MOU](https://www.docomo.ne.jp/english/corporate/ir/binary/pdf/library/presentation/060428/p33_e.pdf): miniutes of usage
+- [MOU](https://www.docomo.ne.jp/english/corporate/ir/binary/pdf/library/presentation/060428/p33_e.pdf): minutes of usage
 - [RED MARK](https://zhidao.baidu.com/question/687512891865237084.html)
-- [E6_E9](https://zhidao.baidu.com/question/296625569.html)
+- [E6_E8https://zhidao.baidu.com/question/204032713.html?fr=search&word=E6%2C+E8%2C+E9_E9](https://zhidao.baidu.com/question/296625569.html)
+- [E6_E8_E9](https://zhidao.baidu.com/question/204032713.html?fr=search&word=E6%2C+E8%2C+E9)
 
 ## column names(keys of table)
 
@@ -87,9 +89,9 @@ FROM
 | [CI_CUSTYPE](#CI_CUSTYPE) | `varchar(255)` | customer type(pre paid or post paid) | 家庭, 政企, 個人, 其他 | ci_custype |
 | [CI_IVPN_FLAG](#CI_IVPN_FLAG) | `varchar(1)` | wheter the switch board user |  | ci_ivpn_flag | 
 | [CI_CITY](#CI_CITY) | `varchar(255)` | state(all observations are 德阳) | 德阳 | ci_city |
-| [CI_DISTRICT](#CI_DISTRICT) | `varchar(255)` |  | 德阳现业, 广汉 | ci_district |
+| [CI_DISTRICT](#CI_DISTRICT) | `varchar(255)` |  | 德阳现业, 广汉, ... | ci_district |
 | [CI_TENURE](#CI_TENURE) | `int` | user time in the network | | ci_tenure |
-| [PD_CDMA_STATUS](#PD_CDMA_STATUS) |`varchar(255)` | |正常, 欠费双停, 用户要求停机 | pd_cdma_status | 
+| [PD_CDMA_STATUS](#PD_CDMA_STATUS) |`varchar(255)` | |正常, 欠费双停, 用户要求停机, ... | pd_cdma_status | 
 | [PD_CDMA_TENURE](#PD_CDMA_TENURE) | `int` | CDMA time in the network | | pd_cdma_tenure |
 | [PL_CONTRACT_FLAG](#PL_CONTRACT_FLAG) | `varchar(1)` | whether there is agreement |  | pl_contract_flag |
 | PL_INVAMON_MAX | `varchar(8)` | agreement expiration data | | pl_invamon_max
