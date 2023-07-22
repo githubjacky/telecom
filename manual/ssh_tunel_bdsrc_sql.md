@@ -1,6 +1,8 @@
 # SSH Tuneling
-In this tutorial, I'm going to show you how to connect to the remote server's MySQL database
-from your local machine. Notice that the tutorial is for the Mac or Linux user. 
+*Notice that the tutorial is for the Mac or Linux user.*
+
+In this tutorial, I will demonstrate how to connect to a remote server's MySQL database 
+from your local machine or any other machine which the database isn't stored on.
 
 
 ## Install MySQL On Your Local Machine
@@ -14,9 +16,9 @@ ssh -fN -L 3336:127.0.0.1:3306 {bdsrc_hpc_user_name}@140.112.176.245
 ```
 It will activate the prompt asking to input your passords in order to connect to the BDSRC
 HPC. After connect to the master, let the remote MySQL database connect to your local MySQL
-database through the port you just created. The local port 3336 can be customized as you
-want and just remember not to use 3306. While the remote port is fixed to 3306 since MySQL 
-will listen to this port as default. Plus, that's the reason why not setting the local port
+database through the port you just created. The local port 3336 can be customized and 
+just remember not to use 3306. While the remote port is fixed to 3306 since MySQL 
+will listen to this port by default. Plus, that's the reason why not setting the local port
 to 3306. To see the meaning of the flag: f, N and L, refer to the man page.
 
 ```sh
@@ -42,32 +44,57 @@ kill -15 {pid}
 
 
 # Connect MySQL Database In Stata
-
-## Install ODBC Manager: iODBC
-1. build the package: [reference](https://github.com/openlink/iODBC)
-    - If you are a mac user, see the README_MACOSX.md
-
-2. modify the ~/.odbc.ini file to your need
-My configuration:
-```text
-[ODBC Data Sources]
-telecom = telecom
-
-[telecom]
-Driver = /usr/local/lib/libmyodbc8w.so
-Description = BDSRC telecom database
-Host = 127.0.0.1
-UserName = r12323011
-Password = eqatlun4e
-Database = telecom
-Port = 3336
+Follow the instruction [here](https://gist.github.com/erikvw/f178b6a2b66383d83b98f916f9b5699b)
+1. install ODBC mananger
+```sh
+brew install unixodbc
 ```
 
-## Install MySQL ODBC conector(driver)
-- install the driver from [here](https://dev.mysql.com/downloads/connector/odbc/). You can 
-decide down the package or build it from source. Check out the [manual_connector_odbc_installation](https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-installation-binary-macos.html)
+2. install ODBC MySQL driver(connector)
+*weird: use MariaDB connector work*
+```sh
+brew install mariadb-connector-odbc
+```
 
+3. driver cofiguration
+- check the path of the configuration file
+```sh
+odbcinst -j
+```
 
-## odbc
-After setting up the ODBC, you just need to do the ssh tunel connecting to the remote 
-MySQL database and then you can use the command `odbc` in Stata.
+- create the configuration file(.odbc.ini) in your home directory
+```sh
+[! -f $HOME/.odbc.ini] && touch .odbc.ini
+```
+
+- input the following parameters in the file
+    - You have to check out the version of the driver. In may case, it's 3.1.19
+    - the port is customized for the remote MySQL server to listen
+    - the customized port is 3336 in the above section introducing ssh tuneling
+```sh
+[{your_database_name}]
+Driver      = /opt/homebrew/Cellar/mariadb-connector-odbc/3.1.19/lib/mariadb/libmaodbc.dylib
+Description = {description of your database}
+Server      = 127.0.0.1
+Port        = {your_customized_port}
+Database    = {your_database_name}
+User        = {your_database_username}
+Password    = {your_database_password}
+```
+
+4. ssh tunel to remote MySQL server
+
+5. test remote odbc connection
+```
+isql -v {your_database_name}
+```
+
+6. configure the `obsd` command in Stata 16.
+```sh
+export DYLD_LIBRARY_PATH=/opt/homebrew/lib/ && \
+/Applications/Stata/StataSE.app/Contents/MacOS/stata-se 
+```
+
+- stata command:
+    - `set odbcmgr unixodbc[, permanently]`
+    - parameter: permanently is optional
