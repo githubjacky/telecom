@@ -1,0 +1,3 @@
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+ODBC = "be6f12e9-ca4f-5eb2-a339-a4f995cc0291"

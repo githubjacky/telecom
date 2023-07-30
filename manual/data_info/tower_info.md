@@ -104,6 +104,7 @@ DESCRIBE tower_hot_201308;
 
 ```sql
 -- the number of observations
+#%%
 SELECT 
     (SELECT COUNT(*) FROM cinfo_xy) AS cinfo_xy,
     (SELECT COUNT(*) FROM tower) AS tower,

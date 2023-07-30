@@ -1,11 +1,16 @@
-
-# examples/data/
+# reference
 ref/
 
-.sqllsrc.json
 
-# .jupyter/
-# .ipynb_checkpoints/
-# __pycache__/
+# odbc setting
+odbc.ini
+odbcinst.ini
+
+
+# jupyter extension
+.jupyter/
+.ipynb_checkpoints/
+__pycache__/
+
 
 .DS_Store
