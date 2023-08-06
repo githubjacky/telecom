@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "telecom"
+version = "0.1.0"
+description = "telecom database analysis"
+authors = ["Hsiu-Hsuan Yeh"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jupysql = "^0.9.0"
+toml = "^0.10.2"
+pandas = "^2.0.3"
+stata-kernel = "^1.12.2"
+pyodbc = "^4.0.39"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.25.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,5 +1,4 @@
 -----------------------------------------------------------------------------------------
-# %%
 DROP PROCEDURE IF EXISTS telecom.calculate_count_by_column;
 DELIMITER //
 
