@@ -1,6 +1,9 @@
 # reference
 ref/
 
+# environment folder
+env/
+
 
 # odbc setting
 odbc.ini

@@ -12,6 +12,9 @@ toml = "^0.10.2"
 pandas = "^2.0.3"
 stata-kernel = "^1.12.2"
 pyodbc = "^4.0.39"
+bokeh = "^3.2.2"
+python-dotenv = "^1.0.0"
+polars = "^0.18.15"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.0"
