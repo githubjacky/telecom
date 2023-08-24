@@ -40,3 +40,14 @@ FROM clean_user_info
 user_info = DBInterface.execute(conn, sql) |> DataFrame
 println("output clean_user_info.parquet")
 write_parquet("data/processed/user_info.parquet", user_info)
+
+
+println("query telecom.clean_CDR")
+sql = """
+SELECT
+    *
+FROM clean_CDR
+"""
+user_info = DBInterface.execute(conn, sql) |> DataFrame
+println("output clean_CDR.parquet")
+write_parquet("data/processed/clean_CDR.parquet", user_info)
