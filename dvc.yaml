@@ -1,0 +1,10 @@
+stages:
+  prepare_data:
+    cmd: ./prepare_data.sh
+    deps:
+    - env/mysql.sh
+    - prepare_data.sh
+    outs:
+    - data/processed/network.parquet
+    - data/processed/network_sample.parquet
+    - data/processed/user_info.parquet

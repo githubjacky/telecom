@@ -1,0 +1,27 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: ./prepare_data.sh
+    deps:
+    - path: env/mysql.sh
+      hash: md5
+      md5: 119383141efd9e592f6f9bd110910214
+      size: 127
+    - path: prepare_data.sh
+      hash: md5
+      md5: c196b60c4fda7b86cd2f0dce15a2ddbc
+      size: 416
+      isexec: true
+    outs:
+    - path: data/processed/network.parquet
+      hash: md5
+      md5: c52b5845883dacab57a409d6cc112e14
+      size: 132488321
+    - path: data/processed/network_sample.parquet
+      hash: md5
+      md5: 530ea794813aa31ab6c8f609d10032fd
+      size: 2234704
+    - path: data/processed/user_info.parquet
+      hash: md5
+      md5: 6f643f695d232014e759725292033395
+      size: 12438422
