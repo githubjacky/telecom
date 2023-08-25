@@ -1,3 +1,4 @@
 /network.parquet
 /network_sample.parquet
 /user_info.parquet
+/clean_CDR.parquet
