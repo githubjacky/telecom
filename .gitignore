@@ -1,6 +1,9 @@
 # raw data
 data/raw/
 
+env/
+dev/
+
 poetry.lock
 
 # log

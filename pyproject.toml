@@ -20,10 +20,16 @@ pyodbc = "^4.0.39"
 seaborn = "^0.12.2"
 ipykernel = "^6.25.1"
 poetry-kernel = "^0.1.3"
+jupyterlab = "^4.0.5"
+dagshub = "^0.3.5"
 
 [tool.poetry.group.model.dependencies]
 pytorch-lightning = "^2.0.7"
 
+
+
+[tool.poetry.group.dev.dependencies]
+dvc = "^3.16.0"
 
 [build-system]
 requires = ["poetry-core"]
