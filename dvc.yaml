@@ -1,9 +1,11 @@
 stages:
-  prepare_data:
-    cmd: ./prepare_data.sh
+  prepare_parquet:
+    cmd: ./script/prepare_parquet.sh
     deps:
-    - env/mysql.sh
-    - prepare_data.sh
+    - script/prepare_parquet.sh
+    - docker/runtime_script/prepare_parquet.sh
+    - src/data/clean_data_from_raw.sql
+    - src/data/output_parquet.jl
     outs:
     - data/processed/clean_CDR.parquet
     - data/processed/network.parquet

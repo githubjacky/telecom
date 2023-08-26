@@ -1,0 +1,3 @@
+Host 140.112.176.*
+   StrictHostKeyChecking=no
+   UserKnownHostsFile=/dev/null

@@ -15,12 +15,13 @@ RUN apt-get update && \
 
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.0
 COPY pyproject.toml poetry.lock ./
-RUN poetry install
+RUN poetry install --only data
 EXPOSE 8888
 
 
 # set up ODBC
-COPY docker/env/odbcinst.ini /etc/odbcinst.ini
-COPY docker/env/ssh_config /etc/ssh/ssh_config
+COPY docker/utils/odbcinst.ini /etc/odbcinst.ini
+COPY docker/utils/ssh_config /etc/ssh/ssh_config
 
+RUN mkdir -p /data/processed
 CMD ["bash"]

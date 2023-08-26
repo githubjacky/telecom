@@ -1,27 +1,34 @@
-# connect to remote database
-try
+using ODBC, DataFrames, Distributions, Parquet
+
+
+function get_network()
+    ODBC.setunixODBC()
+    conn = ODBC.Connection("telecom")
+
+    sql = """
+    SELECT
+        *
+    FROM network
+    """
+    network = DBInterface.execute(conn, sql) |> DataFrame
+
+    return conn, network
+end
+
+conn, network = try
+    # connect to remote database
     run(`hpc`)
+    println("query telecom.network")
+    get_network()
 catch
     println("kill all ssh process and re-connect to hpc")
     run(`killall ssh`)
     run(`hpc`)
+    println("query telecom.network")
+    get_network()
 end
-
-
-using ODBC, DataFrames, Distributions, Parquet
-
-ODBC.setunixODBC()
-conn = ODBC.Connection("telecom")
 mkpath("data/processed")
 
-
-println("query telecom.network")
-sql = """
-SELECT
-    *
-FROM network
-"""
-network = DBInterface.execute(conn, sql) |> DataFrame
 idx = sample(1:size(network, 1), 80_000; replace=false)
 network_sample = network[idx, :]
 

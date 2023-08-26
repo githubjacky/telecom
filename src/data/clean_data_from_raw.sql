@@ -2,7 +2,7 @@ USE telecom;
 
 
 SELECT 'create table telecom.clean_cdr' as '';
-CREATE TABLE clean_cdr(
+CREATE TABLE IF NOT EXISTS clean_cdr(
 SELECT
     CONVERT(SUBSTRING_INDEX(SUBSTRING_INDEX(END_TIME,' ',-1),':',1),UNSIGNED)   AS time,
     DAYOFWEEK(SUBSTRING_INDEX(END_TIME,' ',1))                                  AS day_of_week,
@@ -25,7 +25,7 @@ WHERE
 
 
 SELECT 'create table telecom.target_node' as '';
-CREATE TABLE target_node(
+CREATE TABLE IF NOT EXISTS target_node(
 SELECT DISTINCT subquery.client_nbr
 FROM(
     (
@@ -44,7 +44,7 @@ FROM(
 
 
 SELECT 'create table telecom.clean_user_info' as '';
-CREATE TABLE clean_user_info(
+CREATE TABLE IF NOT EXISTS clean_user_info(
 SELECT
     MSISDN                                          AS client_nbr,
     CI_DISTRICT                                     AS register_district,
@@ -140,7 +140,7 @@ WHERE
 
 
 SELECT 'create table telecom.clean_CDR' as '';
-CREATE TABLE clean_CDR(
+CREATE TABLE IF NOT EXISTS clean_CDR(
 SELECT *
 FROM clean_cdr 
 WHERE 
@@ -150,7 +150,7 @@ WHERE
 
 
 SELECT 'create table telecom.network' as '';
-CREATE TABLE network(
+CREATE TABLE IF NOT EXISTS network(
 SELECT
     *
 FROM clean_CDR
@@ -158,11 +158,3 @@ WHERE
     calling_nbr in (SELECT client_nbr FROM clean_user_info) AND
     called_nbr in (SELECT client_nbr FROM clean_user_info)
 );
-
-
-SELECT 'remove table telecom.target_node' as '';
-DROP TABLE telecom.target_node;
-
-
-SELECT 'remove table telecom.clean_cdr' as '';
-DROP TABLE telecom.clean_cdr;

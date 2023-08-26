@@ -10,8 +10,7 @@ docker run --rm \
 	-e HPC_PASS=$HPC_PASS \
 	-e MYSQL_USER=$MYSQL_USER \
 	-e MYSQL_PASS=$MYSQL_PASS \
-	-p 8888:8888 \
 	-v $PWD/notebooks:/telecom/notebooks \
-	-v $PWD/docker/script/data_service.sh:/telecom/script/data_service.sh \
-	0jacky/telecom:data_servicee \
+	-v $PWD/docker/runtime_script/data_service.sh:/telecom/script/data_service.sh \
+	0jacky/telecom:data_service \
 	bash script/data_service.sh
