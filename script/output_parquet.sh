@@ -11,7 +11,7 @@ docker run --rm -it \
 	-e MYSQL_USER=$MYSQL_USER \
 	-e MYSQL_PASS=$MYSQL_PASS \
 	-v $PWD/src/data/output_parquet.jl:/telecom/output_parquet.jl \
-	-v $PWD/docker/runtime_script/output_parquet.sh:/telecom/script/output_parquet.sh \
+	-v $PWD/dockerfile/data/output_parquet/output_parquet.sh:/telecom/script/output_parquet.sh \
 	-v /telecom/output/processed:$PWD/data/processed \
-	0jacky/telecom:data_service \
+	0jacky/telecom:output_parquet \
 	bash script/output_parquet.sh

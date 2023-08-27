@@ -27,7 +27,6 @@ dagshub = "^0.3.5"
 pytorch-lightning = "^2.0.7"
 
 
-
 [tool.poetry.group.dev.dependencies]
 dvc = "^3.16.0"
 

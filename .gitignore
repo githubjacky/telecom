@@ -4,10 +4,10 @@ data/raw/
 env/
 dev/
 
-poetry.lock
 
 # log
 log/
+
 
 # reference
 ref/

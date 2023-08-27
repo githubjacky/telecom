@@ -10,7 +10,7 @@ docker run --rm \
 	-e HPC_PASS=$HPC_PASS \
 	-e MYSQL_USER=$MYSQL_USER \
 	-e MYSQL_PASS=$MYSQL_PASS \
-	-v $PWD/src/data/clean_data_from_raw.sql:/telecom/clean_data_from_raw.sql \
-	-v $PWD/dockerfile/data/prepare_parquet/prepare_parquet.sh:/telecom/script/prepare_parquet.sh \
+	-v $PWD/notebooks:/telecom/notebooks \
+	-v $PWD/dockerfile/data/prepare_parquet/EDA.sh:/telecom/script/EDA.sh \
 	0jacky/telecom:prepare_parquet \
-	bash script/prepare_parquet.sh
+	bash script/data_service.sh
