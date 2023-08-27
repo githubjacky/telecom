@@ -9,5 +9,7 @@ RUN mkdir -p data/processed
 
 # for odbc library
 ENV OVERRIDE_ODBCJL_CONFIG=true
+COPY dockerfile/data/utils/odbcinst.ini /etc/odbcinst.ini
+COPY dockerfile/data/utils/ssh_config /etc/ssh/ssh_config
 
 CMD ["bash"]
