@@ -2,12 +2,7 @@ stages:
   prepare_parquet:
     cmd: ./script/prepare_parquet.sh
     deps:
+    - dockerfile/data/prepare_parquet/prepare_parquet.sh
+    - env/hpc_mysql_credentials
     - script/prepare_parquet.sh
-    - docker/runtime_script/prepare_parquet.sh
     - src/data/clean_data_from_raw.sql
-    - src/data/output_parquet.jl
-    outs:
-    - data/processed/clean_CDR.parquet
-    - data/processed/network.parquet
-    - data/processed/network_sample.parquet
-    - data/processed/user_info.parquet

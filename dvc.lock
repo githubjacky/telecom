@@ -1,0 +1,21 @@
+schema: '2.0'
+stages:
+  prepare_parquet:
+    cmd: ./script/prepare_parquet.sh
+    deps:
+    - path: dockerfile/data/prepare_parquet/prepare_parquet.sh
+      hash: md5
+      md5: 55b42770d36f9bea3f041f9e3d784963
+      size: 492
+    - path: env/hpc_mysql_credentials
+      hash: md5
+      md5: 81f6fb0a7e5facec8b0fbff79fad9b29
+      size: 91
+    - path: script/prepare_parquet.sh
+      hash: md5
+      md5: 6aa6568ffb8dfc5b3d8affc58b0e0aa8
+      size: 535
+    - path: src/data/clean_data_from_raw.sql
+      hash: md5
+      md5: 60de3167b2c1eda52309062c479887da
+      size: 6611
