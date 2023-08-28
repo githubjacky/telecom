@@ -4,6 +4,8 @@ USE telecom;
 SELECT 'create table telecom.clean_cdr' as '';
 CREATE TABLE IF NOT EXISTS clean_cdr(
 SELECT
+    SERV_ID                                                                     AS serv_id,
+    ACC_NBR                                                                     AS client_nbr,
     CONVERT(SUBSTRING_INDEX(SUBSTRING_INDEX(END_TIME,' ',-1),':',1),UNSIGNED)   AS time,
     DAYOFWEEK(SUBSTRING_INDEX(END_TIME,' ',1))                                  AS day_of_week,
     CALLING_NBR                                                                 AS calling_nbr,
@@ -46,33 +48,29 @@ FROM(
 SELECT 'create table telecom.clean_user_info' as '';
 CREATE TABLE IF NOT EXISTS clean_user_info(
 SELECT
-    MSISDN                                          AS client_nbr,
-    CI_DISTRICT                                     AS register_district,
-    2013 - CONVERT(SUBSTR(CERT_NBR,10,4), UNSIGNED) AS age,
-    HS_CDMA_BRAND                                   AS phone_brand,
-    CASE HS_CDMA_LAYER
-        WHEN '超低端' THEN 1
-        WHEN '低端' THEN 2
-        WHEN '中端' THEN 3
-        WHEN '高端' THEN 4
-        ELSE 5
-    END                                             AS phone_level,
-    HS_CDMA_TER_PRICE                               AS phone_price,
-    CONVERT(HS_CDMA_IS_EVDO, UNSIGNED)              AS evdo_support_flag,
-    VO_CDMA_MOUOUT_LOCAL_M1                         AS mou_local,
-    VO_CDMA_MOU_DIST_M1                             AS mou_dist,
-    VO_NET_VOL_M1                                   AS network_vol,
-    CONVERT(PD_EVDO_FLAG_M1, UNSIGNED)              AS evdo_use_flag,
-    CONVERT(PD_1X_FLAG_M1, UNSIGNED)                AS onex_use_flag,
-    VO_EVDO_VOL_M1                                  AS evdo_vol,
-    VO_1X_VOL_M1                                    AS onex_vol,
-    MB_ARPU_CDMA_ALL_M1                             AS arpu,
-    CONVERT(PL_E9_FLAG, UNSIGNED)                   AS e9_service_flag,
-    CONVERT(PL_E6_FLAG, UNSIGNED)                   AS e6_service_flag,
-    CONVERT(IS_E9ZX, UNSIGNED)                      AS e9_service_premium_flag,
-    CASE IS_8CARD WHEN '是' THEN 1 ELSE 0 END       AS 8card_service_flag,
-    CASE IS_INTELLIGENT WHEN '是' THEN 1 ELSE 0 END AS smart_phone_flag,
-    CASE IS_CARDPHONE WHEN '是' THEN 1 ELSE 0 END   AS card_phone_flag,
+    SERV_ID                                                                        AS serv_id,
+    MSISDN                                                                         AS client_nbr,
+    CONCAT(SUBSTR(CERT_NBR, 1, 2), SUBSTR(CERT_NBR, 4, 2), SUBSTR(CERT_NBR, 7, 2)) AS born_area_code,
+    CI_DISTRICT                                                                    AS register_district,
+    2013 - CONVERT(SUBSTR(CERT_NBR,10,4), UNSIGNED)                                AS age,
+    HS_CDMA_BRAND                                                                  AS phone_brand,
+    HS_CDMA_LAYER                                                                  AS phone_level,
+    HS_CDMA_TER_PRICE                                                              AS phone_price,
+    CONVERT(HS_CDMA_IS_EVDO, UNSIGNED)                                             AS evdo_support_flag,
+    VO_CDMA_MOUOUT_LOCAL_M1                                                        AS mou_local,
+    VO_CDMA_MOU_DIST_M1                                                            AS mou_dist,
+    VO_NET_VOL_M1                                                                  AS network_vol,
+    CONVERT(PD_EVDO_FLAG_M1, UNSIGNED)                                             AS evdo_use_flag,
+    CONVERT(PD_1X_FLAG_M1, UNSIGNED)                                               AS onex_use_flag,
+    VO_EVDO_VOL_M1                                                                 AS evdo_vol,
+    VO_1X_VOL_M1                                                                   AS onex_vol,
+    MB_ARPU_CDMA_ALL_M1                                                            AS arpu,
+    CONVERT(PL_E9_FLAG, UNSIGNED)                                                  AS e9_service_flag,
+    CONVERT(PL_E6_FLAG, UNSIGNED)                                                  AS e6_service_flag,
+    CONVERT(IS_E9ZX, UNSIGNED)                                                     AS e9_service_premium_flag,
+    CASE IS_8CARD WHEN '是' THEN 1 ELSE 0 END                                      AS 8card_service_flag,
+    CASE IS_INTELLIGENT WHEN '是' THEN 1 ELSE 0 END                                AS smart_phone_flag,
+    CASE IS_CARDPHONE WHEN '是' THEN 1 ELSE 0 END                                  AS card_phone_flag,
     CASE WHEN
             (
                 DETAIL_NAME = '农村公众（家庭及个人）' OR

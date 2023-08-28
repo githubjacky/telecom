@@ -1,6 +1,6 @@
 sshpass -p $HPC_PASS \
 	ssh -o StrictHostKeyChecking=no \
-	-fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245 -p 2026
+	-fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245
 
 service mariadb start
 

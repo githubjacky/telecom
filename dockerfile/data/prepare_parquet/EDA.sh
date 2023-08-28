@@ -1,5 +1,9 @@
 sshpass -p $HPC_PASS \
-	ssh -fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245 -p 2026
+	ssh -o StrictHostKeyChecking=no \
+	-fN -L 3336:127.0.0.1:3306 \
+	$HPC_USER@140.112.176.245 -p
+
+service mariadb start
 
 cat >>/root/.odbc.ini <<EOF
 [telecom]
@@ -15,4 +19,4 @@ EOF
 # test
 # mysql --user=$MYSQL_USER --password=$MYSQL_PASS --port=3336 --protocol TCP
 
-jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+jupyter lab --ip=* --port=8888 --no-browser --allow-root

@@ -15,4 +15,5 @@ User = $MYSQL_USER
 Password = $MYSQL_PASS
 EOF
 
-julia --project=. output_parquet.jl
+mysql --user=$MYSQL_USER --password=$MYSQL_PASS --database=telecom \
+	--port=3336 --protocol TCP
