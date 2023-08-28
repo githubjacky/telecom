@@ -6,3 +6,15 @@ stages:
     - env/hpc_mysql_credentials
     - script/prepare_parquet.sh
     - src/data/clean_data_from_raw.sql
+  output_parquet:
+    cmd: ./script/output_parquet.sh
+    deps:
+    - dockerfile/data/output_parquet/output_parquet.sh
+    - env/hpc_mysql_credentials
+    - script/output_parquet.sh
+    - src/data/output_parquet.jl
+    outs:
+    - data/processed/network_sample.parquet
+    - data/processed/network.parquet
+    - data/processed/user_info.parquet
+    - data/processed/clean_CDR.parquet

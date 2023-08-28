@@ -1,8 +1,6 @@
 sshpass -p $HPC_PASS \
 	ssh -fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245 -p 2026
 
-service mariadb start
-
 cat >>/root/.odbc.ini <<EOF
 [telecom]
 Driver = mysql_driver

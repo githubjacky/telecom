@@ -1,7 +1,9 @@
 # raw data
-data/raw/
+# data/
+data/raw
 
 env/
+env
 dev/
 
 

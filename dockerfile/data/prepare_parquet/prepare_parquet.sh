@@ -1,5 +1,6 @@
 sshpass -p $HPC_PASS \
-	ssh -fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245 -p 2026
+	ssh -o StrictHostKeyChecking=no \
+	-fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245 -p 2026
 
 service mariadb start
 
@@ -14,4 +15,5 @@ User = $MYSQL_USER
 Password = $MYSQL_PASS
 EOF
 
-mysql -u $MYSQL_USER -p $MYSQL_PASS telecom <clean_data_from_raw.sql
+mysql --user=$MYSQL_USER --password=$MYSQL_PASS --port=3336 --protocol=TCP \
+	--database=telecom <clean_data_from_raw.sql

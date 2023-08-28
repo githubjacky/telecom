@@ -6,6 +6,7 @@
 source env/hpc_mysql_credentials
 
 docker run --rm \
+	--name prepare_parquet \
 	-e HPC_USER=$HPC_USER \
 	-e HPC_PASS=$HPC_PASS \
 	-e MYSQL_USER=$MYSQL_USER \
