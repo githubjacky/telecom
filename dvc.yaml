@@ -17,4 +17,4 @@ stages:
     - data/processed/network_sample.parquet
     - data/processed/network.parquet
     - data/processed/user_info.parquet
-    - data/processed/clean_CDR.parquet
+    # - data/processed/clean_CDR.parquet

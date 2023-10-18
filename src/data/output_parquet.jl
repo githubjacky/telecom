@@ -37,14 +37,14 @@ if !isfile("data/processed/user_info.parquet")
 end
 
 
-if !isfile("data/processed/clean_CDR.parquet")
-    println("query telecom.clean_CDR")
-    sql = """
-    SELECT
-        *
-    FROM clean_CDR
-    """
-    user_info = DBInterface.execute(conn, sql) |> DataFrame
-    println("output clean_CDR.parquet")
-    write_parquet("data/processed/clean_CDR.parquet", user_info)
-end
+# if !isfile("data/processed/clean_CDR.parquet")
+#     println("query telecom.clean_CDR")
+#     sql = """
+#     SELECT
+#         *
+#     FROM clean_CDR
+#     """
+#     user_info = DBInterface.execute(conn, sql) |> DataFrame
+#     println("output clean_CDR.parquet")
+#     write_parquet("data/processed/clean_CDR.parquet", user_info)
+# end
