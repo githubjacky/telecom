@@ -16,3 +16,4 @@ Password = $MYSQL_PASS
 EOF
 
 julia --project=. output_parquet.jl
+# bash

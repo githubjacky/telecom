@@ -16,7 +16,9 @@ RUN apt-get update && \
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.6.0
 COPY pyproject.toml ./
 RUN poetry install --without model
+
 EXPOSE 8888
+EXPOSE 3306
 
 
 # set up ODBC

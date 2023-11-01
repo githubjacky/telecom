@@ -1,8 +1,9 @@
 # sshpass -p $HPC_PASS \
 # 	ssh -o StrictHostKeyChecking=no \
-# 	-fN -L 3336:127.0.0.1:3306 $HPC_USER@140.112.176.245
+# 	-fN -L 3336:127.0.0.1:3306 \
+# 	$HPC_USER@140.112.176.245
 
-service mariadb start
+# service mariadb start
 
 # cat >>/root/.odbc.ini <<EOF
 # [telecom]
@@ -15,5 +16,7 @@ service mariadb start
 # Password = $MYSQL_PASS
 # EOF
 
-mysql --user=$MYSQL_USER --password=$MYSQL_PASS --database=telecom \
-	--port=3306 --protocol TCP
+# test
+# mysql --user=$MYSQL_USER --password=$MYSQL_PASS --port=3336 --protocol TCP
+
+jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root

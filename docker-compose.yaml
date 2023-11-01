@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  mysql:
+    image: 0jacky/telecom:prepare_parquet
+    build:
+      dockerfile: ./dockerfile/data/prepare_parquet//Dockerfile
+      context: .
+    env_file: env/hpc_mysql_credentials
+    container_name: mysql
+    network_mode: "host"
+    ports:
+      - "3306:3306"
+    volumes:
+      - $PWD/dockerfile/data/prepare_parquet/mysql.sh:/telecom/script/mysql.sh
+    command: bash script/mysql.sh
+  jupyter:
+    image: 0jacky/telecom:prepare_parquet
+    env_file: env/hpc_mysql_credentials
+    container_name: jupyter
+    network_mode: "host"
+    ports:
+      - "8888:8888"
+    cpus: "0.5"
+    mem_reservation: "8G"
+    mem_limit: "16G"
+    volumes:
+      - $PWD/notebooks:/telecom/notebooks
+      - $PWD/data:/telecom/data
+      - $PWD/dockerfile/data/prepare_parquet/jupyter.sh:/telecom/script/jupyter.sh
+    command: bash script/jupyter.sh
