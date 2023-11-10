@@ -1,0 +1,16 @@
+hydra:
+    output_subdir: null
+    run:
+      dir: .
+
+
+preprocess:
+  mysql_user:
+  mysql_pass:
+  timeout: 15
+  sleep: 1
+  db: telecom
+  output_dir: data/processed
+  month: 201406
+  # latlon2addr, preprocess, create_meta_tower
+  strategy: preprocess

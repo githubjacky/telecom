@@ -6,6 +6,8 @@ services:
     network_mode: "host"
     ports:
       - "3306:3306"
+    volumes:
+      - $PWD/src:/home/$DOCKER_USER/telecom/src
     command: mysql -h 127.0.0.1 --user=$MYSQL_USER --password=$MYSQL_PASS --database=telecom --port=3306
   jupyter:
     image: 0jacky/telecom:data
@@ -21,6 +23,7 @@ services:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASS=$MYSQL_PASS
       - LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64/
+      - google_api_key=$google_api_key
     container_name: jupyter
     network_mode: "host"
     ports:
@@ -34,9 +37,34 @@ services:
             count: 3
             capabilities: [gpu]
     volumes:
-      - $PWD/dockerfile:/home/$DOCKER_USER/telecom/dockerfile
+      - $PWD/config:/home/$DOCKER_USER/telecom/config
       - $PWD/notebooks:/home/$DOCKER_USER/telecom/notebooks
       - $PWD/data:/home/$DOCKER_USER/telecom/data
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - /usr/local/cuda-12.2/lib64:/usr/local/cuda-12.2/lib64
     command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+    # command: bash
+  preprocess:
+    image: 0jacky/telecom:data
+    environment:
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASS=$MYSQL_PASS
+      - LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64/
+    container_name: preprocess
+    network_mode: "host"
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 3
+            capabilities: [gpu]
+    volumes:
+      - $PWD/config:/home/$DOCKER_USER/telecom/config
+      - $PWD/data:/home/$DOCKER_USER/telecom/data
+      - $PWD/src:/home/$DOCKER_USER/telecom/src
+      - $PWD/script:/home/$DOCKER_USER/telecom/script
+      - /usr/local/cuda-12.2/lib64:/usr/local/cuda-12.2/lib64
+    command: python script/preprocess.py
