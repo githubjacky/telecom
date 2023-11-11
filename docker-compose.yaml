@@ -42,8 +42,8 @@ services:
       - $PWD/data:/home/$DOCKER_USER/telecom/data
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - /usr/local/cuda-12.2/lib64:/usr/local/cuda-12.2/lib64
-    command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
-    # command: bash
+    # command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+    command: bash
   preprocess:
     image: 0jacky/telecom:data
     environment:
