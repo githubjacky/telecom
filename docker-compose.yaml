@@ -27,6 +27,7 @@ services:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASS=$MYSQL_PASS
       - google_api_key=$google_api_key
+      - UCX_TLS=tcp,cuda_copy
     container_name: jupyter
     network_mode: "host"
     ports:
@@ -53,6 +54,7 @@ services:
     environment:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASS=$MYSQL_PASS
+      - UCX_TLS=tcp,cuda_copy
     container_name: preprocess
     network_mode: "host"
     ports:

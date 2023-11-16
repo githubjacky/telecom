@@ -90,7 +90,13 @@ class Preprocess:
 
         return output_dict
 
-    def get_from_sql(self, query: str, output_path: Path, write: bool = True, parquet = False) -> pd.DataFrame:
+    def get_from_sql(self,
+                     query: str,
+                     output_path: Path,
+                     write: bool = True,
+                     parquet = False,
+                     return_df = False
+                     ) -> pd.DataFrame:
         if not output_path.exists():
             with self.engine.connect() as conn, conn.begin():
                 df = cudf.from_pandas(pd.read_sql_query(sql.text(query), conn))
@@ -118,8 +124,8 @@ class Preprocess:
             else:
                 df = cudf.read_csv(str(output_path) + '.csv').to_pandas()
 
-
-        return df
+        if return_df:
+            return df
 
 
     def write_to_sql(self, df: pd.DataFrame, table: str) -> None:
@@ -153,11 +159,12 @@ WHERE
     (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month})) AND
     (CALLING_AREA_CODE = '0838' OR CALLED_AREA_CODE = '0838')\
 """
-        df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
-        self.write_to_sql(df, f'clean_cdr_{self.month}')
+        # df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
+        self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
+        # self.write_to_sql(df, f'clean_cdr_{self.month}')
 
 
-    def create_target_node(self) -> None:
+    def create_cdr_node(self) -> None:
         query = f"""\
 SELECT DISTINCT subquery.client_nbr
 FROM(
@@ -174,8 +181,8 @@ FROM(
     )
 ) AS subquery\
 """
-        df = self.get_from_sql(query, self.output_dir / 'target_node')
-        self.write_to_sql(df, f'target_node_{self.month}')
+        df = self.get_from_sql(query, self.output_dir / 'cdr_node')
+        self.write_to_sql(df, f'cdr_node_{self.month}')
 
 
     def create_clean_user_info(self) -> None:
@@ -210,7 +217,6 @@ SELECT
     MB_ENPR_FLAG_M1                                                                AS govern_worker_flag,
     IS_BUSINESS                                                                    AS business_purpose_flag,
     RED_MARK                                                                       AS red_mark_flag,
-    PAYMENT_FLAG                                                                   AS payment_flag,
     IS_ZQJN                                                                        AS govern_cluster_flag,
     IS_ZQHY                                                                        AS govern_industry_flag,
     VPN_FLAG                                                                       AS vpn_support_flag,
@@ -275,25 +281,11 @@ WHERE
     IS_WX_FLAG = 0 AND  # wireless ?
     PAYMENT_FLAG = 1 AND
     IS_INTELLIGENT != 'None' AND
-    HS_CDMA_MODEL NOT LIKE '%(固定台)' AND
-    MSISDN IN (SELECT client_nbr FROM target_node_{self.month})\
+    HS_CDMA_MODEL NOT LIKE '%(固定台)'\
 """
-        df = self.get_from_sql(query, self.output_dir / 'clean_user_info')
-        self.write_to_sql(df, f'clean_user_info_{self.month}')
-
-
-
-    def create_network(self) -> None:
-        query = f"""\
-SELECT
-    *
-FROM clean_cdr_{self.month}
-WHERE
-    calling_nbr in (SELECT client_nbr FROM clean_user_info_{self.month}) AND
-    called_nbr in (SELECT client_nbr FROM clean_user_info_{self.month})\
-"""
-        df = self.get_from_sql(query, self.output_dir / 'network', parquet=True)
-        self.write_to_sql(df, f'network_{self.month}')
+        # df = self.get_from_sql(query, self.output_dir / 'clean_user_info')
+        self.get_from_sql(query, self.output_dir / 'clean_user_info')
+        # self.write_to_sql(df, f'clean_user_info_{self.month}')
 
 
     @staticmethod
@@ -405,31 +397,35 @@ WHERE
         tower_ = tower.astype({'tower_area_code': int})
         tower_.to_csv('data/processed/meta_tower.csv', index=False)
 
-    def userinfo_cdr(self) -> None:
+    def aggregate(self) -> None:
         dask.config.set({'dataframe.backend': 'cudf'})
+
         meta_tower = dd.read_csv('data/processed/meta_tower.csv')
+        user_info = dd.read_csv(f'{self.output_dir}/clean_user_info.csv')
+
         if self.device == 'cuda':
             clean_cdr = read_parquet(f'{self.output_dir}/clean_cdr')
         else:
             clean_cdr = dd.read_csv(f'{self.output_dir}/clean_cdr.csv')
 
-        df = dd.merge(clean_cdr, meta_tower, on='cell_id')
+        df1 = dd.merge(clean_cdr, meta_tower, on='cell_id')
+        df2 = dd.merge(df1, user_info, on='client_nbr')
 
         if self.device == 'cuda':
-            df.to_parquet(self.output_dir / 'userinfo_cdr')
+            df1.to_parquet(self.output_dir / 'cdr_loc')
+            df2.to_parquet(self.output_dir / 'cdr_loc_userinfo')
         else:
-            df.to_csv(self.output_dir / 'userinfo_cdr.csv')
+            df1.to_csv(self.output_dir / 'cdr_loc.csv')
+            df2.to_csv(self.output_dir / 'cdr_loc_userinfo.csv')
 
 
 
     def preprocess(self) -> None:
         logger.info(f'create telecom.clean_cdr_{self.month}')
         self.create_clean_cdr()
-        logger.info(f'create telecom.target_node_{self.month}')
-        self.create_target_node()
+        # logger.info(f'create telecom.cdr_node_{self.month}')
+        # self.create_cdr_node()
         logger.info(f'create telecom.clean_user_info_{self.month}')
         self.create_clean_user_info()
-        logger.info(f'create telecom.network_{self.month}')
-        self.create_network()
-        logger.info(f'create userinfo_cdr')
-        self.userinfo_cdr()
+        logger.info(f'aggregation')
+        self.aggregate()
