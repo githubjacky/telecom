@@ -1,4 +1,8 @@
 import cudf
+import dask
+import dask_cudf
+from dask_cudf import read_parquet
+import dask.dataframe as dd
 from geopy.geocoders import Nominatim
 from loguru import logger
 import orjson
@@ -39,6 +43,18 @@ class Preprocess:
             self.output_dir.mkdir(exist_ok=True, parents=True)
         self.month = str(month)
 
+        try:
+            import torch
+            if torch.cuda.is_available():
+                self.device = 'cuda'
+                logger.info('activated device is: cuda')
+            else:
+                self.device = 'cpu'
+                logger.info('1: activated device is: cpu')
+        except:
+            self.device = 'cpu'
+            logger.info('2: activated device is: cpu')
+
 
     @staticmethod
     def read_jsonl(input_file: Path) -> List[Dict]:
@@ -74,14 +90,34 @@ class Preprocess:
 
         return output_dict
 
-    def get_from_sql(self, query: str, output_path: Path, write: bool = True) -> pd.DataFrame:
+    def get_from_sql(self, query: str, output_path: Path, write: bool = True, parquet = False) -> pd.DataFrame:
         if not output_path.exists():
             with self.engine.connect() as conn, conn.begin():
-                df = pd.read_sql_query(sql.text(query), conn)
+                df = cudf.from_pandas(pd.read_sql_query(sql.text(query), conn))
 
-            if write: df.to_csv(output_path, index=False)
+            if write:
+                if parquet and self.device == 'cuda':
+                    df['calling_area_code'] = cudf.to_numeric(
+                        df['calling_area_code'],
+                        downcast="integer",
+                        errors = 'coerce'
+                    )
+                    df['called_area_code'] = cudf.to_numeric(
+                        df['called_area_code'],
+                        downcast="integer",
+                        errors = 'coerce'
+                    )
+                    df.dropna(inplace=True)
+                    dask_cudf.from_cudf(df, npartitions=12).to_parquet(output_path)
+                else:
+                    df.to_csv(str(output_path)+'.csv', index=False)
+            df = df.to_pandas()
         else:
-            df = pd.read_csv(output_path)
+            if parquet and self.device == 'cuda':
+                df = read_parquet(output_path).compute().to_pandas()
+            else:
+                df = cudf.read_csv(str(output_path) + '.csv').to_pandas()
+
 
         return df
 
@@ -94,7 +130,7 @@ class Preprocess:
                 logger.info(f'{table} has already existed in mysql')
 
 
-    def create_clean_cdr(self):
+    def create_clean_cdr(self) -> None:
         query = f"""\
 SELECT
     SERV_ID                                                                     AS serv_id,
@@ -117,11 +153,11 @@ WHERE
     (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month})) AND
     (CALLING_AREA_CODE = '0838' OR CALLED_AREA_CODE = '0838')\
 """
-        df = self.get_from_sql(query, self.output_dir / 'clean_cdr.csv')
+        df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
         self.write_to_sql(df, f'clean_cdr_{self.month}')
 
 
-    def create_target_node(self):
+    def create_target_node(self) -> None:
         query = f"""\
 SELECT DISTINCT subquery.client_nbr
 FROM(
@@ -138,11 +174,11 @@ FROM(
     )
 ) AS subquery\
 """
-        df = self.get_from_sql(query, self.output_dir / 'target_node.csv')
+        df = self.get_from_sql(query, self.output_dir / 'target_node')
         self.write_to_sql(df, f'target_node_{self.month}')
 
 
-    def create_clean_user_info(self):
+    def create_clean_user_info(self) -> None:
         year = self.month[:4]
 
         query = f"""\
@@ -171,6 +207,13 @@ SELECT
     CASE IS_8CARD WHEN '是' THEN 1 ELSE 0 END                                      AS 8card_service_flag,
     CASE IS_INTELLIGENT WHEN '是' THEN 1 ELSE 0 END                                AS smart_phone_flag,
     CASE IS_CARDPHONE WHEN '是' THEN 1 ELSE 0 END                                  AS card_phone_flag,
+    MB_ENPR_FLAG_M1                                                                AS govern_worker_flag,
+    IS_BUSINESS                                                                    AS business_purpose_flag,
+    RED_MARK                                                                       AS red_mark_flag,
+    PAYMENT_FLAG                                                                   AS payment_flag,
+    IS_ZQJN                                                                        AS govern_cluster_flag,
+    IS_ZQHY                                                                        AS govern_industry_flag,
+    VPN_FLAG                                                                       AS vpn_support_flag,
     CASE WHEN
             (
                 DETAIL_NAME = '农村公众（家庭及个人）' OR
@@ -198,7 +241,7 @@ SELECT
         OR
         (
             MB_ENPR_FLAG_M1 = 1 OR   # individual works for government
-            IS_BUSINESS = '1' OR     # wheter pay the fee
+            IS_BUSINESS = '1' OR     # wheter unit pay the fee
             RED_MARK = 1 OR          # 省市领导级别的人
             PL_BUSINESS_FLAG = 1 OR  # business user
             IS_ZQJN = 1 OR           # whether the gorvernment & enterprise cluster
@@ -235,7 +278,7 @@ WHERE
     HS_CDMA_MODEL NOT LIKE '%(固定台)' AND
     MSISDN IN (SELECT client_nbr FROM target_node_{self.month})\
 """
-        df = self.get_from_sql(query, self.output_dir / 'clean_user_info.csv')
+        df = self.get_from_sql(query, self.output_dir / 'clean_user_info')
         self.write_to_sql(df, f'clean_user_info_{self.month}')
 
 
@@ -249,7 +292,7 @@ WHERE
     calling_nbr in (SELECT client_nbr FROM clean_user_info_{self.month}) AND
     called_nbr in (SELECT client_nbr FROM clean_user_info_{self.month})\
 """
-        df = self.get_from_sql(query, self.output_dir / 'network.csv')
+        df = self.get_from_sql(query, self.output_dir / 'network', parquet=True)
         self.write_to_sql(df, f'network_{self.month}')
 
 
@@ -292,7 +335,7 @@ WHERE
         return call_area_code
 
 
-    def get_tower_locmeta(self):
+    def get_tower_locmeta(self) -> None:
         call_area_code_path = Path('data/processed/call_area_code.json')
         if call_area_code_path.exists():
             call_area_code = orjson.loads(call_area_code_path.read_text())
@@ -345,11 +388,38 @@ WHERE
         for i in loc_data:
             latlon2call_area_code[tuple(i['latlon'])] = i['call_area_code']
 
-        tower['call_area_code'] = tower.apply(
+        tower['tower_area_code'] = tower.apply(
             lambda x: latlon2call_area_code[(x['LAT'], x['LON'])],
             axis = 1
         )
-        tower.to_csv('data/processed/meta_tower.csv', index=False)
+        tower.drop(columns=['CELL_10', 'X', 'Y'], inplace=True)
+        tower.rename(
+            columns = {
+                'CELL_16': 'cell_id',
+                'LON': 'lon',
+                'LAT': 'lat',
+                'DEYANG_CENTER': 'deyang_center_flag'
+            },
+            inplace = True
+        )
+        tower_ = tower.astype({'tower_area_code': int})
+        tower_.to_csv('data/processed/meta_tower.csv', index=False)
+
+    def userinfo_cdr(self) -> None:
+        dask.config.set({'dataframe.backend': 'cudf'})
+        meta_tower = dd.read_csv('data/processed/meta_tower.csv')
+        if self.device == 'cuda':
+            clean_cdr = read_parquet(f'{self.output_dir}/clean_cdr')
+        else:
+            clean_cdr = dd.read_csv(f'{self.output_dir}/clean_cdr.csv')
+
+        df = dd.merge(clean_cdr, meta_tower, on='cell_id')
+
+        if self.device == 'cuda':
+            df.to_parquet(self.output_dir / 'userinfo_cdr')
+        else:
+            df.to_csv(self.output_dir / 'userinfo_cdr.csv')
+
 
 
     def preprocess(self) -> None:
@@ -361,3 +431,5 @@ WHERE
         self.create_clean_user_info()
         logger.info(f'create telecom.network_{self.month}')
         self.create_network()
+        logger.info(f'create userinfo_cdr')
+        self.userinfo_cdr()

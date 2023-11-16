@@ -2,3 +2,4 @@
     autostage = true
 ['remote "origin"']
     url = https://dagshub.com/githubjacky/telecom.dvc
+    read_timeout = 0

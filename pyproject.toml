@@ -16,6 +16,8 @@ distributed = "2023.9.3"
 geopy = "^2.4.0"
 orjson = "^3.9.10"
 loguru = "^0.7.2"
+nvgpu = "0.9.0"
+pynvml = "11.4.1"
 
 [tool.poetry.group.data.dependencies]
 jupysql = "^0.9.0"
@@ -26,9 +28,14 @@ pymysql = "^1.1.0"
 sqlalchemy = "<2.0.0"
 httpx = "^0.25.1"
 selectolax = "^0.3.17"
+hvplot = "^0.9.0"
+geoviews = "^1.11.0"
+selenium = "^4.15.2"
+geckodriver-autoinstaller = "^0.1.0"
 
 [tool.poetry.group.model.dependencies]
 pytorch-lightning = "^2.0.7"
+torch-geometric = "^2.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -40,6 +47,7 @@ jupyterlab = "3.6.6"
 jupyterlab-lsp = "4.3.0"
 python-lsp-server = {extras = ["all"], version = "^1.8.2"}
 dask-labextension = "6.2.0"
+jupyter-bokeh = "3.0.2"
 
 
 [build-system]

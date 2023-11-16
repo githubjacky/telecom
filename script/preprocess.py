@@ -1,3 +1,5 @@
+from dask_cuda import LocalCUDACluster
+from dask.distributed import Client
 import os, sys
 sys.path.append(os.path.abspath(f"{os.getcwd()}"))
 import hydra
@@ -25,4 +27,13 @@ def main(cfg: DictConfig):
 
 
 if __name__ == "__main__":
+    cluster = LocalCUDACluster(
+        CUDA_VISIBLE_DEVICES="0,1",
+        protocol="ucx",
+        enable_tcp_over_ucx=True,
+        enable_infiniband=True,
+        rmm_managed_memory=True,
+        rmm_pool_size='24GB'
+    )
+    client = Client(cluster)
     main()

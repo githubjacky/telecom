@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   mysql:
-    image: 0jacky/telecom:data
+    image: 0jacky/telecom:env
     container_name: mysql
     network_mode: "host"
     ports:
@@ -10,24 +10,28 @@ services:
       - $PWD/src:/home/$DOCKER_USER/telecom/src
     command: mysql -h 127.0.0.1 --user=$MYSQL_USER --password=$MYSQL_PASS --database=telecom --port=3306
   jupyter:
-    image: 0jacky/telecom:data
+    image: 0jacky/telecom:env
     build:
-      dockerfile: ./dockerfile/data/Dockerfile
+      dockerfile: ./Dockerfile
       context: .
       args:
         UID: $USERID
         GID: $GROUPID
         USER: $DOCKER_USER
+      shm_size: '20gb'
+      network: host
+    cap_add:
+      - CAP_SYS_PTRACE
     environment:
       - DOCKER_USER=$DOCKER_USER
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASS=$MYSQL_PASS
-      - LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64/
       - google_api_key=$google_api_key
     container_name: jupyter
     network_mode: "host"
     ports:
       - "8888:8888"
+      - "6666:6666"
       - "3306:3306"
     deploy:
       resources:
@@ -41,15 +45,14 @@ services:
       - $PWD/notebooks:/home/$DOCKER_USER/telecom/notebooks
       - $PWD/data:/home/$DOCKER_USER/telecom/data
       - $PWD/src:/home/$DOCKER_USER/telecom/src
-      - /usr/local/cuda-12.2/lib64:/usr/local/cuda-12.2/lib64
-    # command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
-    command: bash
+      - $PWD/report:/home/$DOCKER_USER/telecom/report
+    command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+    # command: bash
   preprocess:
-    image: 0jacky/telecom:data
+    image: 0jacky/telecom:env
     environment:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASS=$MYSQL_PASS
-      - LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64/
     container_name: preprocess
     network_mode: "host"
     ports:
@@ -66,5 +69,5 @@ services:
       - $PWD/data:/home/$DOCKER_USER/telecom/data
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - $PWD/script:/home/$DOCKER_USER/telecom/script
-      - /usr/local/cuda-12.2/lib64:/usr/local/cuda-12.2/lib64
     command: python script/preprocess.py
+    # command: bash
