@@ -156,8 +156,7 @@ WHERE
     (CALLING_NBR NOT LIKE 'NotMobile_%' AND CALLED_NBR NOT LIKE 'NotMobile_%') AND
     (CALLING_AREA_CODE != '-1' AND CALLED_AREA_CODE != '-1')                   AND
     (CELL_ID != '-1' AND CELL_ID != '0')                                       AND
-    (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month})) AND
-    (CALLING_AREA_CODE = '0838' OR CALLED_AREA_CODE = '0838')\
+    (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}))\
 """
         # df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
         self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
