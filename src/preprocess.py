@@ -1,8 +1,3 @@
-import cudf
-import dask_cudf
-from dask_cudf import read_parquet, concat, from_cudf
-import dask
-import dask.dataframe as dd
 from geopy.geocoders import Nominatim
 from loguru import logger
 import orjson
@@ -93,39 +88,27 @@ class Preprocess:
     def get_from_sql(self,
                      query: str,
                      output_path: Path,
-                     write: bool = True,
-                     parquet = False,
-                     return_df = False
-                     ) -> pd.DataFrame:
-        if not output_path.exists():
-            with self.engine.connect() as conn, conn.begin():
-                df = cudf.from_pandas(pd.read_sql_query(sql.text(query), conn))
+                     ) -> None:
+        with self.engine.connect() as conn, conn.begin():
+            df = pd.read_sql_query(sql.text(query), conn)
 
-            if write:
-                if parquet and self.device == 'cuda':
-                    df['calling_area_code'] = cudf.to_numeric(
-                        df['calling_area_code'],
-                        downcast="integer",
-                        errors = 'coerce'
-                    )
-                    df['called_area_code'] = cudf.to_numeric(
-                        df['called_area_code'],
-                        downcast="integer",
-                        errors = 'coerce'
-                    )
-                    df.dropna(inplace=True)
-                    dask_cudf.from_cudf(df, npartitions=12).to_parquet(output_path)
-                else:
-                    df.to_csv(str(output_path)+'.csv', index=False)
-            df = df.to_pandas()
-        else:
-            if parquet and self.device == 'cuda':
-                df = read_parquet(output_path).compute().to_pandas()
-            else:
-                df = cudf.read_csv(str(output_path) + '.csv').to_pandas()
+        try:
+            df['calling_area_code'] = pd.to_numeric(
+                df['calling_area_code'],
+                downcast="integer",
+                errors = 'coerce'
+            )
+            df['called_area_code'] = pd.to_numeric(
+                df['called_area_code'],
+                downcast="integer",
+                errors = 'coerce'
+            )
 
-        if return_df:
-            return df
+            df.dropna(inplace=True)
+            df.to_csv(str(output_path)+'.csv', index=False)
+        except:
+            df.to_csv(str(output_path)+'.csv', index=False)
+
 
 
     def write_to_sql(self, df: pd.DataFrame, table: str) -> None:
@@ -161,7 +144,7 @@ WHERE
     (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}))\
 """
         # df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
-        self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
+        self.get_from_sql(query, self.output_dir / 'clean_cdr')
         # self.write_to_sql(df, f'clean_cdr_{self.month}')
 
 
@@ -413,256 +396,14 @@ WHERE
         tower_ = tower.astype({'tower_area_code': int})
         tower_.to_csv('data/processed/meta_tower.csv', index=False)
 
-    def aggregate(self) -> None:
-        dask.config.set({'dataframe.backend': 'cudf'})
 
-        meta_tower = dd.read_csv('data/processed/meta_tower.csv')
-        user_info = dd.read_csv(f'{self.output_dir}/clean_user_info.csv')
-
-        if self.device == 'cuda':
-            clean_cdr = read_parquet(f'{self.output_dir}/clean_cdr')
-        else:
-            clean_cdr = dd.read_csv(f'{self.output_dir}/clean_cdr.csv')
-
-        df1 = dd.merge(clean_cdr, meta_tower, on='cell_id')
-        df2 = dd.merge(df1, user_info, on='client_nbr')
-
-        if self.device == 'cuda':
-            df1.to_parquet(self.output_dir / 'cdr_loc')
-            df2.to_parquet(self.output_dir / 'cdr_loc_userinfo')
-        else:
-            df1.to_csv(self.output_dir / 'cdr_loc.csv', index=False)
-            df2.to_csv(self.output_dir / 'cdr_loc_userinfo.csv', index=False)
-
-
-    def preprocess(self) -> None:
-        logger.info(f'create telecom.clean_cdr_{self.month}')
+    def clean_from_mysql(self) -> None:
+        logger.info(f'get clean_cdr_{self.month}.csv')
         self.create_clean_cdr()
         # logger.info(f'create telecom.cdr_node_{self.month}')
         # self.create_cdr_node()
-        logger.info(f'create telecom.clean_user_info_{self.month}')
+        logger.info(f'get clean_user_info_{self.month}.csv')
         self.create_clean_user_info()
-        logger.info(f'aggregation')
-        self.aggregate()
 
-
-    @staticmethod
-    def create_worklife_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr']):
-        worklife_group = (
-            clean_cdr.groupby(order + ['day_of_week'])
-            .agg({'client_nbr': 'size', 'duration': 'sum'})
-            .reset_index()
-            .rename(columns={'client_nbr': 'count'})
-        )
-
-        _worklife_work = worklife_group.copy()
-        _worklife_work[['count', 'duration']] = _worklife_work[['count', 'duration']].mask(
-            (_worklife_work['day_of_week'] == 1) |
-            (_worklife_work['day_of_week'] == 7),
-            0
-        )
-        worklife_work = (
-            _worklife_work.groupby(order)
-            .sum()
-            .drop(columns='day_of_week')
-            .rename(columns={'count': 'count_work', 'duration': 'duration_work'})
-            .reset_index()
-        )
-
-        _worklife_life = worklife_group.copy()
-        _worklife_life[['count', 'duration']] = _worklife_life[['count', 'duration']].mask(
-            (_worklife_life['day_of_week'] != 1) &
-            (_worklife_life['day_of_week'] != 7),
-            0
-        )
-        worklife_life = (
-            _worklife_life.groupby(order)
-            .sum()
-            .drop(columns='day_of_week')
-            .rename(columns={'count': 'count_life', 'duration': 'duration_life'})
-            .reset_index()
-        )
-
-        worklife_prop =  worklife_work.merge(worklife_life, on=order, how='inner')
-        worklife_prop['count'] = worklife_prop['count_work'] + worklife_prop['count_life']
-        worklife_prop['duration'] = worklife_prop['duration_work'] + worklife_prop['duration_life']
-
-        return worklife_prop
-
-
-    @staticmethod
-    def create_daynight_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr'], day_cut: int = 9):
-        daynight_group = (
-            clean_cdr.groupby(order + ['time'])
-            .agg({'client_nbr': 'size', 'duration': 'sum'})
-            .reset_index()
-            .rename(columns={'client_nbr': 'count'})
-        )
-
-        _daynight_day = daynight_group.copy()
-        _daynight_day[['count', 'duration']] = _daynight_day[['count', 'duration']].mask(
-            (_daynight_day['time'] <= day_cut) |
-            (_daynight_day['time'] >= day_cut + 12),
-            0
-        )
-        daynight_day = (
-            _daynight_day.groupby(order)
-            .sum()
-            .drop(columns='time')
-            .rename(columns={'count': 'count_day', 'duration': 'duration_day'})
-            .reset_index()
-        )
-
-        _daynight_night = daynight_group.copy()
-        _daynight_night[['count', 'duration']] = _daynight_night[['count', 'duration']].mask(
-            (_daynight_night['time'] > day_cut) &
-            (_daynight_night['time'] < day_cut + 12),
-            0
-        )
-        daynight_night = (
-            _daynight_night.groupby(order)
-            .sum()
-            .drop(columns='time')
-            .rename(columns={'count': 'count_night', 'duration': 'duration_night'})
-            .reset_index()
-        )
-
-        return daynight_day.merge(daynight_night, on=order, how='inner')
-
-
-    @staticmethod
-    def create_inout_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr']):
-        clean_cdr['local_call_flag'] = 0
-        clean_cdr['local_call_flag'] = clean_cdr['local_call_flag'].mask(
-            (clean_cdr['calling_area_code'] == 838) &
-            (clean_cdr['called_area_code'] == 838),
-            1
-        )
-        clean_cdr['external_area_code'] = 838
-
-        clean_cdr['callout_flag'] = 0
-        clean_cdr['callout_flag'] = clean_cdr['callout_flag'].mask(
-            (clean_cdr['calling_area_code'] == 838) &
-            (clean_cdr['called_area_code'] != 838),
-            1
-        )
-        clean_cdr['external_area_code'] = clean_cdr['external_area_code'].mask(
-            (clean_cdr['calling_area_code'] == 838) &
-            (clean_cdr['called_area_code'] != 838),
-            clean_cdr['called_area_code']
-        )
-
-        clean_cdr['callin_flag'] = 0
-        clean_cdr['callin_flag'] = clean_cdr['callin_flag'].mask(
-            (clean_cdr['calling_area_code'] != 838) &
-            (clean_cdr['called_area_code'] == 838),
-            1
-        )
-        clean_cdr['external_area_code'] = clean_cdr['external_area_code'].mask(
-            (clean_cdr['calling_area_code'] != 838) &
-            (clean_cdr['called_area_code'] == 838),
-            clean_cdr['calling_area_code']
-        )
-
-        return (
-            clean_cdr
-            .groupby(order)
-            .agg({
-                'local_call_flag': 'sum',
-                'callout_flag': 'sum',
-                'callin_flag': 'sum',
-                'external_area_code': 'mean'
-            })
-            .rename(columns={
-                'local_call_flag': 'n_local_call',
-                'callout_flag': 'n_callout',
-                'callin_flag': 'n_callin'
-            })
-        )
-
-
-    @staticmethod
-    def to_undirected(edges):
-        edges['sorted_row'] = [
-            sorted([a,b])
-            for a,b in zip(edges['source'].values_host, edges['destination'].values_host)
-        ]
-        edges['sorted_row'] = edges['sorted_row'].astype(str)
-        return edges.drop_duplicates(subset='sorted_row').drop(columns='sorted_row')
-
-
-    def create_edge_attr(self, thres_n_calls: int = 2, thres_duration: int = 0, save = True):
-        clean_cdr = read_parquet(self.output_dir / 'clean_cdr')
-
-        group1 = (
-            self
-            .create_worklife_attr(clean_cdr, ['calling_nbr', 'called_nbr'])
-            .merge(
-                self.create_daynight_attr(clean_cdr, ['calling_nbr', 'called_nbr']),
-                on=['calling_nbr', 'called_nbr']
-            )
-            .merge(
-                self.create_inout_attr(clean_cdr, ['calling_nbr', 'called_nbr']),
-                on=['calling_nbr', 'called_nbr']
-            )
-            .rename(columns={
-                'calling_nbr': 'source',
-                'called_nbr': 'destination',
-            })
-        )
-        group1['freq'] = 1
-
-        group2 = (
-            self
-            .create_worklife_attr(clean_cdr, ['called_nbr', 'calling_nbr'])
-            .merge(
-                self.create_daynight_attr(clean_cdr, ['called_nbr', 'calling_nbr']),
-                on=['called_nbr', 'calling_nbr']
-            )
-            .merge(
-                self.create_inout_attr(clean_cdr, ['called_nbr', 'calling_nbr']),
-                on=['called_nbr', 'calling_nbr']
-            )
-            .rename(columns={
-                'called_nbr': 'source',
-                'calling_nbr': 'destination',
-            })
-        )
-        group2['freq'] = 1
-
-        _edges = (
-            concat([group1, group2])
-            .groupby(['source', 'destination'])
-            .sum()
-            .reset_index()
-        )
-        edges_ = (
-            _edges[
-                (_edges['count'] >= thres_n_calls) &
-                (_edges['duration'] >= thres_duration) &
-                (_edges['freq'] == 2)
-            ]
-            .drop(columns='freq')
-        )
-        undirected_edges = self.to_undirected(edges_.compute())
-        undirected_edges['external_area_code'] = undirected_edges['external_area_code'].div(2).astype(int)
-
-        user_info = cudf.read_csv(self.output_dir / 'clean_user_info.csv')
-        client = user_info['client_nbr']
-
-        undirected_closed_edges = undirected_edges.loc[
-            (undirected_edges['source'].isin(client)) &
-            (undirected_edges['destination'].isin(client))
-        ]
-        if save:
-            (
-                from_cudf(undirected_edges, npartitions=18)
-                .repartition(partition_size='100MB')
-                .to_parquet(self.output_dir/'undirected_edges')
-            )
-            (
-                undirected_closed_edges
-                .to_csv(f'{self.output_dir}/undirected_closed_edges.csv', index=False)
-            )
-
-        return undirected_edges, undirected_closed_edges
+    def output_to_mysql(self) -> None:
+        pass

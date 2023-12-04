@@ -13,6 +13,6 @@ preprocess:
   output_dir: data/processed
   month: 201308
   # latlon2addr, create_meta_tower, preprocess, create_edge_attr
-  strategy: create_edge_attr
+  strategy: preprocess
   thres_n_calls: 2
   thres_duration: 0
