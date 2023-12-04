@@ -1,7 +1,7 @@
 import cudf
-import dask
 import dask_cudf
-from dask_cudf import read_parquet
+from dask_cudf import read_parquet, concat, from_cudf
+import dask
 import dask.dataframe as dd
 from geopy.geocoders import Nominatim
 from loguru import logger
@@ -156,6 +156,8 @@ WHERE
     (CALLING_NBR NOT LIKE 'NotMobile_%' AND CALLED_NBR NOT LIKE 'NotMobile_%') AND
     (CALLING_AREA_CODE != '-1' AND CALLED_AREA_CODE != '-1')                   AND
     (CELL_ID != '-1' AND CELL_ID != '0')                                       AND
+    CALLING_NBR != CALLED_NBR                                                  AND
+    BILLING_DURATION > 10                                                      AND
     (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}))\
 """
         # df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
@@ -192,11 +194,9 @@ SELECT
     SERV_ID                                                                        AS serv_id,
     MSISDN                                                                         AS client_nbr,
     CONCAT(SUBSTR(CERT_NBR, 1, 2), SUBSTR(CERT_NBR, 4, 2), SUBSTR(CERT_NBR, 7, 2)) AS born_area_code,
-    CI_DISTRICT                                                                    AS register_district,
     {year} - CONVERT(SUBSTR(CERT_NBR,10,4), UNSIGNED)                              AS age,
     CONVERT(SUBSTR(CERT_NBR, 21, 1), UNSIGNED)                                     AS male_flag,
     CI_TENURE                                                                      AS tenure,
-    HS_CDMA_BRAND                                                                  AS phone_brand,
     HS_CDMA_LAYER                                                                  AS phone_level,
     HS_CDMA_TER_PRICE                                                              AS phone_price,
     CONVERT(HS_CDMA_IS_EVDO, UNSIGNED)                                             AS evdo_support_flag,
@@ -219,6 +219,23 @@ SELECT
     IS_ZQJN                                                                        AS govern_cluster_flag,
     IS_ZQHY                                                                        AS govern_industry_flag,
     VPN_FLAG                                                                       AS vpn_support_flag,
+    CASE HS_CDMA_BRAND WHEN '华为' THEN 1 ELSE 0 END                                AS brand_huawei_flag,
+    CASE HS_CDMA_BRAND WHEN 'SAMSUNG' THEN 1 ELSE 0 END                            AS brand_samsung_flag,
+    CASE HS_CDMA_BRAND WHEN '酷派' THEN 1 ELSE 0 END                                AS brand_coolpad_flag,
+    CASE HS_CDMA_BRAND WHEN '中兴' THEN 1 ELSE 0 END                                AS brand_zhongxing_flag,
+    CASE HS_CDMA_BRAND WHEN '海信' THEN 1 ELSE 0 END                                AS brand_hisense_flag,
+    CASE HS_CDMA_BRAND WHEN '蓝天' THEN 1 ELSE 0 END                                AS brand_bluesky_flag,
+    CASE HS_CDMA_BRAND WHEN '广信' THEN 1 ELSE 0 END                                AS brand_guangxin_flag,
+    CASE HS_CDMA_BRAND WHEN '联想' THEN 1 ELSE 0 END                                AS brand_lenova_flag,
+    CASE HS_CDMA_BRAND WHEN 'HTC' THEN 1 ELSE 0 END                                AS brand_htc_flag,
+    CASE HS_CDMA_BRAND WHEN '同威' THEN 1 ELSE 0 END                                AS brand_tongwei_flag,
+    CASE HS_CDMA_BRAND WHEN '苹果' THEN 1 ELSE 0 END                                AS brand_apple_flag,
+    CASE CI_DISTRICT WHEN '德阳现业' THEN 1 ELSE 0 END                               AS register_jingyang_flag,
+    CASE CI_DISTRICT WHEN '广汉' THEN 1 ELSE 0 END                                  AS register_guanghan_flag,
+    CASE CI_DISTRICT WHEN '绵竹' THEN 1 ELSE 0 END                                  AS register_mianzhu_flag,
+    CASE CI_DISTRICT WHEN '什邡' THEN 1 ELSE 0 END                                  AS register_shifang_flag,
+    CASE CI_DISTRICT WHEN '罗江' THEN 1 ELSE 0 END                                  AS register_luojiang_flag,
+    CASE CI_DISTRICT WHEN '中江' THEN 1 ELSE 0 END                                  AS register_zhongjiang_flag,
     CASE WHEN
             (
                 DETAIL_NAME = '农村公众（家庭及个人）' OR
@@ -414,9 +431,8 @@ WHERE
             df1.to_parquet(self.output_dir / 'cdr_loc')
             df2.to_parquet(self.output_dir / 'cdr_loc_userinfo')
         else:
-            df1.to_csv(self.output_dir / 'cdr_loc.csv')
-            df2.to_csv(self.output_dir / 'cdr_loc_userinfo.csv')
-
+            df1.to_csv(self.output_dir / 'cdr_loc.csv', index=False)
+            df2.to_csv(self.output_dir / 'cdr_loc_userinfo.csv', index=False)
 
 
     def preprocess(self) -> None:
@@ -428,3 +444,225 @@ WHERE
         self.create_clean_user_info()
         logger.info(f'aggregation')
         self.aggregate()
+
+
+    @staticmethod
+    def create_worklife_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr']):
+        worklife_group = (
+            clean_cdr.groupby(order + ['day_of_week'])
+            .agg({'client_nbr': 'size', 'duration': 'sum'})
+            .reset_index()
+            .rename(columns={'client_nbr': 'count'})
+        )
+
+        _worklife_work = worklife_group.copy()
+        _worklife_work[['count', 'duration']] = _worklife_work[['count', 'duration']].mask(
+            (_worklife_work['day_of_week'] == 1) |
+            (_worklife_work['day_of_week'] == 7),
+            0
+        )
+        worklife_work = (
+            _worklife_work.groupby(order)
+            .sum()
+            .drop(columns='day_of_week')
+            .rename(columns={'count': 'count_work', 'duration': 'duration_work'})
+            .reset_index()
+        )
+
+        _worklife_life = worklife_group.copy()
+        _worklife_life[['count', 'duration']] = _worklife_life[['count', 'duration']].mask(
+            (_worklife_life['day_of_week'] != 1) &
+            (_worklife_life['day_of_week'] != 7),
+            0
+        )
+        worklife_life = (
+            _worklife_life.groupby(order)
+            .sum()
+            .drop(columns='day_of_week')
+            .rename(columns={'count': 'count_life', 'duration': 'duration_life'})
+            .reset_index()
+        )
+
+        worklife_prop =  worklife_work.merge(worklife_life, on=order, how='inner')
+        worklife_prop['count'] = worklife_prop['count_work'] + worklife_prop['count_life']
+        worklife_prop['duration'] = worklife_prop['duration_work'] + worklife_prop['duration_life']
+
+        return worklife_prop
+
+
+    @staticmethod
+    def create_daynight_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr'], day_cut: int = 9):
+        daynight_group = (
+            clean_cdr.groupby(order + ['time'])
+            .agg({'client_nbr': 'size', 'duration': 'sum'})
+            .reset_index()
+            .rename(columns={'client_nbr': 'count'})
+        )
+
+        _daynight_day = daynight_group.copy()
+        _daynight_day[['count', 'duration']] = _daynight_day[['count', 'duration']].mask(
+            (_daynight_day['time'] <= day_cut) |
+            (_daynight_day['time'] >= day_cut + 12),
+            0
+        )
+        daynight_day = (
+            _daynight_day.groupby(order)
+            .sum()
+            .drop(columns='time')
+            .rename(columns={'count': 'count_day', 'duration': 'duration_day'})
+            .reset_index()
+        )
+
+        _daynight_night = daynight_group.copy()
+        _daynight_night[['count', 'duration']] = _daynight_night[['count', 'duration']].mask(
+            (_daynight_night['time'] > day_cut) &
+            (_daynight_night['time'] < day_cut + 12),
+            0
+        )
+        daynight_night = (
+            _daynight_night.groupby(order)
+            .sum()
+            .drop(columns='time')
+            .rename(columns={'count': 'count_night', 'duration': 'duration_night'})
+            .reset_index()
+        )
+
+        return daynight_day.merge(daynight_night, on=order, how='inner')
+
+
+    @staticmethod
+    def create_inout_attr(clean_cdr, order: List[str] = ['calling_nbr', 'called_nbr']):
+        clean_cdr['local_call_flag'] = 0
+        clean_cdr['local_call_flag'] = clean_cdr['local_call_flag'].mask(
+            (clean_cdr['calling_area_code'] == 838) &
+            (clean_cdr['called_area_code'] == 838),
+            1
+        )
+        clean_cdr['external_area_code'] = 838
+
+        clean_cdr['callout_flag'] = 0
+        clean_cdr['callout_flag'] = clean_cdr['callout_flag'].mask(
+            (clean_cdr['calling_area_code'] == 838) &
+            (clean_cdr['called_area_code'] != 838),
+            1
+        )
+        clean_cdr['external_area_code'] = clean_cdr['external_area_code'].mask(
+            (clean_cdr['calling_area_code'] == 838) &
+            (clean_cdr['called_area_code'] != 838),
+            clean_cdr['called_area_code']
+        )
+
+        clean_cdr['callin_flag'] = 0
+        clean_cdr['callin_flag'] = clean_cdr['callin_flag'].mask(
+            (clean_cdr['calling_area_code'] != 838) &
+            (clean_cdr['called_area_code'] == 838),
+            1
+        )
+        clean_cdr['external_area_code'] = clean_cdr['external_area_code'].mask(
+            (clean_cdr['calling_area_code'] != 838) &
+            (clean_cdr['called_area_code'] == 838),
+            clean_cdr['calling_area_code']
+        )
+
+        return (
+            clean_cdr
+            .groupby(order)
+            .agg({
+                'local_call_flag': 'sum',
+                'callout_flag': 'sum',
+                'callin_flag': 'sum',
+                'external_area_code': 'mean'
+            })
+            .rename(columns={
+                'local_call_flag': 'n_local_call',
+                'callout_flag': 'n_callout',
+                'callin_flag': 'n_callin'
+            })
+        )
+
+
+    @staticmethod
+    def to_undirected(edges):
+        edges['sorted_row'] = [
+            sorted([a,b])
+            for a,b in zip(edges['source'].values_host, edges['destination'].values_host)
+        ]
+        edges['sorted_row'] = edges['sorted_row'].astype(str)
+        return edges.drop_duplicates(subset='sorted_row').drop(columns='sorted_row')
+
+
+    def create_edge_attr(self, thres_n_calls: int = 2, thres_duration: int = 0, save = True):
+        clean_cdr = read_parquet(self.output_dir / 'clean_cdr')
+
+        group1 = (
+            self
+            .create_worklife_attr(clean_cdr, ['calling_nbr', 'called_nbr'])
+            .merge(
+                self.create_daynight_attr(clean_cdr, ['calling_nbr', 'called_nbr']),
+                on=['calling_nbr', 'called_nbr']
+            )
+            .merge(
+                self.create_inout_attr(clean_cdr, ['calling_nbr', 'called_nbr']),
+                on=['calling_nbr', 'called_nbr']
+            )
+            .rename(columns={
+                'calling_nbr': 'source',
+                'called_nbr': 'destination',
+            })
+        )
+        group1['freq'] = 1
+
+        group2 = (
+            self
+            .create_worklife_attr(clean_cdr, ['called_nbr', 'calling_nbr'])
+            .merge(
+                self.create_daynight_attr(clean_cdr, ['called_nbr', 'calling_nbr']),
+                on=['called_nbr', 'calling_nbr']
+            )
+            .merge(
+                self.create_inout_attr(clean_cdr, ['called_nbr', 'calling_nbr']),
+                on=['called_nbr', 'calling_nbr']
+            )
+            .rename(columns={
+                'called_nbr': 'source',
+                'calling_nbr': 'destination',
+            })
+        )
+        group2['freq'] = 1
+
+        _edges = (
+            concat([group1, group2])
+            .groupby(['source', 'destination'])
+            .sum()
+            .reset_index()
+        )
+        edges_ = (
+            _edges[
+                (_edges['count'] >= thres_n_calls) &
+                (_edges['duration'] >= thres_duration) &
+                (_edges['freq'] == 2)
+            ]
+            .drop(columns='freq')
+        )
+        undirected_edges = self.to_undirected(edges_.compute())
+        undirected_edges['external_area_code'] = undirected_edges['external_area_code'].div(2).astype(int)
+
+        user_info = cudf.read_csv(self.output_dir / 'clean_user_info.csv')
+        client = user_info['client_nbr']
+
+        undirected_closed_edges = undirected_edges.loc[
+            (undirected_edges['source'].isin(client)) &
+            (undirected_edges['destination'].isin(client))
+        ]
+        if save:
+            (
+                from_cudf(undirected_edges, npartitions=18)
+                .repartition(partition_size='100MB')
+                .to_parquet(self.output_dir/'undirected_edges')
+            )
+            (
+                undirected_closed_edges
+                .to_csv(f'{self.output_dir}/undirected_closed_edges.csv', index=False)
+            )
+
+        return undirected_edges, undirected_closed_edges

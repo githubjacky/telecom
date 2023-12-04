@@ -8,6 +8,7 @@ dev/
 cudnn
 cuda-12.2
 
+data/serv_acct_item_0838_201406_out.csv
 
 # log
 log/
@@ -110,4 +111,3 @@ target/
 
 # Hydra logs
 outputs
-/report
