@@ -13,6 +13,7 @@ data/serv_acct_item_0838_201406_out.csv
 data/processed
 
 script/mysql.sh
+notebooks/
 
 # log
 log/
