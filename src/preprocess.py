@@ -88,11 +88,13 @@ class Preprocess:
     def get_from_sql(self,
                      query: str,
                      output_path: Path,
-                     ) -> None:
+                     return_df = False
+                     ):
         with self.engine.connect() as conn, conn.begin():
             df = pd.read_sql_query(sql.text(query), conn)
+            print(f'number of raw: {df.shape[0]}')
 
-        try:
+        if 'calling_area_code' in df:
             df['calling_area_code'] = pd.to_numeric(
                 df['calling_area_code'],
                 downcast="integer",
@@ -106,8 +108,11 @@ class Preprocess:
 
             df.dropna(inplace=True)
             df.to_csv(str(output_path)+'.csv', index=False)
-        except:
+        else:
             df.to_csv(str(output_path)+'.csv', index=False)
+
+        if return_df:
+            return df
 
 
 
@@ -140,12 +145,11 @@ WHERE
     (CALLING_AREA_CODE != '-1' AND CALLED_AREA_CODE != '-1')                   AND
     (CELL_ID != '-1' AND CELL_ID != '0')                                       AND
     CALLING_NBR != CALLED_NBR                                                  AND
-    BILLING_DURATION > 10                                                      AND
     (CALLING_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}) OR CALLED_NBR in (SELECT MSISDN FROM tb_asz_cdma_0838_{self.month}))\
 """
         # df = self.get_from_sql(query, self.output_dir / 'clean_cdr', parquet=True)
-        self.get_from_sql(query, self.output_dir / 'clean_cdr')
-        # self.write_to_sql(df, f'clean_cdr_{self.month}')
+        df = self.get_from_sql(query, self.output_dir / 'clean_cdr', return_df=True)
+        self.write_to_sql(df, f'clean_cdr_{self.month}')
 
 
     def create_cdr_node(self) -> None:
@@ -283,8 +287,8 @@ WHERE
     HS_CDMA_MODEL NOT LIKE '%(固定台)'\
 """
         # df = self.get_from_sql(query, self.output_dir / 'clean_user_info')
-        self.get_from_sql(query, self.output_dir / 'clean_user_info')
-        # self.write_to_sql(df, f'clean_user_info_{self.month}')
+        df = self.get_from_sql(query, self.output_dir / 'clean_user_info', return_df=True)
+        self.write_to_sql(df, f'clean_user_info_{self.month}')
 
 
     @staticmethod

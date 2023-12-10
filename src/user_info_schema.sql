@@ -19,10 +19,10 @@
 -- Table structure for table `tb_asz_cdma_0838_201406`
 --
 
-DROP TABLE IF EXISTS `tb_asz_cdma_0838_201406`;
+DROP TABLE IF EXISTS `tb_asz_cdma_0838_201307`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_asz_cdma_0838_201406` (
+CREATE TABLE `tb_asz_cdma_0838_201307` (
   `MONTH_NO` varchar(6) DEFAULT NULL,
   `SERV_ID` varchar(8) DEFAULT NULL,
   `CERT_NBR` varchar(255) DEFAULT NULL,

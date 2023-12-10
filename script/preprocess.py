@@ -16,7 +16,7 @@ def main(cfg: DictConfig):
     if cfg.preprocess.strategy == 'preprocess':
         months = [
             201307,
-            # 201308,
+            201308,
             # 201309,
             # 201310,
             # 201311,
