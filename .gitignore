@@ -12,6 +12,9 @@ cuda-12.2
 # log
 log/
 
+data/processed/201307
+data/processed/201401
+data/processed/201402
 
 # reference
 ref/

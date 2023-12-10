@@ -38,9 +38,9 @@ services:
       resources:
         reservations:
           devices:
-          - driver: nvidia
-            count: 3
-            capabilities: [gpu]
+            - driver: nvidia
+              count: 3
+              capabilities: [gpu]
     volumes:
       - $PWD/config:/home/$DOCKER_USER/telecom/config
       - $PWD/notebooks:/home/$DOCKER_USER/telecom/notebooks
@@ -48,7 +48,7 @@ services:
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - $PWD/report:/home/$DOCKER_USER/telecom/report
     command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
-    # command: bash
+    # command: ipython
   preprocess:
     image: 0jacky/telecom:env
     environment:

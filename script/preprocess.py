@@ -1,5 +1,6 @@
 from dask_cuda import LocalCUDACluster
 from dask.distributed import Client
+import dask
 import os, sys
 sys.path.append(os.path.abspath(f"{os.getcwd()}"))
 import hydra
@@ -16,14 +17,14 @@ def main(cfg: DictConfig):
         output_dir = cfg.preprocess.output_dir,
         month = cfg.preprocess.month
     )
-    logger.info(f'preprocess strategy: {cfg.preprocess.strategy}')
-    match cfg.preprocess.strategy:
+    logger.info(f'preprocess strategy: {cfg.preprocess.stage}')
+    match cfg.preprocess.stage:
         case 'latlon2addr':
             driver.latlon2addr(cfg.preprocess.timeout, cfg.preprocess.sleep)
-        case 'preprocess':
-            driver.preprocess()
         case 'create_meta_tower':
             driver.create_meta_tower()
+        case 'preprocess':
+            driver.preprocess(cfg.preprocess.preprocess_strategy)
 
 
 if __name__ == "__main__":
@@ -37,3 +38,5 @@ if __name__ == "__main__":
     )
     client = Client(cluster)
     main()
+    client.close()
+    cluster.close()

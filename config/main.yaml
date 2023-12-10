@@ -11,6 +11,8 @@ preprocess:
   sleep: 1
   db: telecom
   output_dir: data/processed
-  month: 201308
-  # latlon2addr, create_meta_tower, preprocess
-  strategy: preprocess
+  month: 201307
+  # latlon2addr, create_meta_tower, preprocess, upload_mysql
+  stage: preprocess
+  # csv, mysql
+  preprocess_strategy: csv
