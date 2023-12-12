@@ -8,6 +8,8 @@ dev/
 cudnn
 cuda-12.2
 
+script/mysql.sh
+
 
 # log
 log/
