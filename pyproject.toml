@@ -50,6 +50,7 @@ jupyter-bokeh = "3.0.2"
 notebook = "^7.1.3"
 nbclassic = "^1.0.0"
 jupyter-console = "^6.6.3"
+jupynium = "^0.2.2"
 
 
 
