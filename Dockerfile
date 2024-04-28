@@ -53,7 +53,7 @@ RUN poetry install
 
 RUN pip install dask-cuda
 
-EXPOSE 8888
+EXPOSE 8891
 EXPOSE 6666
 EXPOSE 3306
 
