@@ -21,6 +21,7 @@ pynvml = "11.4.1"
 dask-sql = "^2023.11.0"
 graphistry = "^0.31.1"
 pyarrow = "14.0.2"
+linearmodels = "^6.0"
 
 [tool.poetry.group.data.dependencies]
 jupysql = "^0.9.0"
