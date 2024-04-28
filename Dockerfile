@@ -29,10 +29,12 @@ RUN groupadd --gid $GID $USER \
     && chmod 0440 /etc/sudoers.d/$USER
 
 RUN pip install \
-    --no-cache-dir \
-    --extra-index-url https://pypi.nvidia.com \
-    cudf-cu12 dask-cudf-cu12
-    # cuml-cu12 cugraph-cu12 cuspatial-cu12 cuproj-cu12 cuxfilter-cu12 cucim
+    --extra-index-url=https://pypi.nvidia.com \
+    cudf-cu12==24.2.* dask-cudf-cu12==24.2.* cuml-cu12==24.2.* \
+    cugraph-cu12==24.2.* cuspatial-cu12==24.2.* cuproj-cu12==24.2.* \
+    cuxfilter-cu12==24.2.* cucim-cu12==24.2.* pylibraft-cu12==24.2.* \
+    raft-dask-cu12==24.2.*
+
 
 ENV PATH="/home/$USER/.local/bin:$PATH"
 RUN git clone https://github.com/rapidsai/ucx-py \

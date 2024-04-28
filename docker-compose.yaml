@@ -9,7 +9,7 @@ services:
     volumes:
       - $PWD/src:/home/$DOCKER_USER/telecom/src
     command: mysql -h 127.0.0.1 --user=$MYSQL_USER --password=$MYSQL_PASS --database=telecom --port=3306
-  jupyter:
+  jupyter-lab:
     image: 0jacky/telecom:env
     build:
       dockerfile: ./Dockerfile
@@ -31,7 +31,7 @@ services:
     container_name: jupyter
     network_mode: "host"
     ports:
-      - "8888:8888"
+      - "8891:8891"
       - "6666:6666"
       - "3306:3306"
     deploy:
@@ -39,7 +39,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 3
+              count: 2
               capabilities: [gpu]
     volumes:
       - $PWD/config:/home/$DOCKER_USER/telecom/config
@@ -47,7 +47,8 @@ services:
       - $PWD/data:/home/$DOCKER_USER/telecom/data
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - $PWD/report:/home/$DOCKER_USER/telecom/report
-    command: jupyter lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+      - $PWD/cuda-12.2:/home/$DOCKER_USER/telecom/cuda-12.2
+    command: jupyter lab --ip 0.0.0.0 --port 8891 --no-browser --allow-root
     # command: ipython
   preprocess:
     image: 0jacky/telecom:env
@@ -64,7 +65,7 @@ services:
         reservations:
           devices:
           - driver: nvidia
-            count: 3
+            count: 2
             capabilities: [gpu]
     volumes:
       - $PWD/config:/home/$DOCKER_USER/telecom/config

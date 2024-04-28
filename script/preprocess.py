@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(f"{os.getcwd()}"))
 import hydra
 from loguru import logger
 from omegaconf import DictConfig
-from src.data.preprocess import Preprocess
+from src.process.preprocess import Preprocess
 
 
 
