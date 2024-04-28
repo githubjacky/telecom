@@ -23,6 +23,7 @@ graphistry = "^0.31.1"
 pyarrow = "14.0.2"
 linearmodels = "^6.0"
 pysal = "^24.1"
+jupynium = "^0.2.2"
 
 [tool.poetry.group.data.dependencies]
 jupysql = "^0.9.0"
