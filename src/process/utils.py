@@ -2,6 +2,7 @@ import cudf
 import dask.dataframe as dd
 from functools import cached_property
 from geopy.distance import geodesic
+import pandas as pd
 from typing import Literal
 
 
@@ -77,7 +78,7 @@ class CallDistanceUtil:
 
 
     @cached_property
-    def cdr_lonlat(self):
+    def cdr_lonlat(self) -> cudf.DataFrame:
         cdr_lonlat =  (
             self.cdr[['calling_nbr', 'called_nbr']]
             .merge(
@@ -107,52 +108,126 @@ class CallDistanceUtil:
 
 
     @cached_property
-    def mean_client_distance(self):
+    def mean_calling_distance(self) -> cudf.DataFrame:
         return (
-            cudf.concat([
-                self.cdr_lonlat,
-                self.cdr_lonlat.rename(
-                    columns = {
-                        'calling_nbr': 'called_nbr',
-                        'called_nbr': 'calling_nbr'
-                    })
-            ])[['calling_nbr', 'called_nbr', 'distance']]
+            self.cdr_lonlat
+            [['calling_nbr', 'called_nbr', 'distance']]
             .groupby(['calling_nbr'])['distance']
             .mean()
             .reset_index()
-            .rename(columns={'calling_nbr': 'client_nbr', 'distance': 'mean_call_distance(km)'})
+            .rename(columns={'calling_nbr': 'client_nbr', 'distance': 'mean_calling_distance'})
         )
 
 
     @cached_property
-    def std_client_distance(self):
+    def std_calling_distance(self) -> cudf.DataFrame:
         return (
-            cudf.concat([
-                self.cdr_lonlat,
-                self.cdr_lonlat.rename(
-                    columns = {
-                        'calling_nbr': 'called_nbr',
-                        'called_nbr': 'calling_nbr'
-                    })
-            ])[['calling_nbr', 'called_nbr', 'distance']]
+            self.cdr_lonlat
+            [['calling_nbr', 'called_nbr', 'distance']]
             .groupby(['calling_nbr'])['distance']
             .std()
             .reset_index()
-            .rename(columns={'calling_nbr': 'client_nbr', 'distance': 'std_call_distance(km)'})
+            .rename(columns={'calling_nbr': 'client_nbr', 'distance': 'std_calling_distance'})
+        )
+
+
+    @cached_property
+    def mean_called_distance(self) -> cudf.DataFrame:
+        return (
+            self.cdr_lonlat
+            [['calling_nbr', 'called_nbr', 'distance']]
+            .groupby(['called_nbr'])['distance']
+            .mean()
+            .reset_index()
+            .rename(columns={'called_nbr': 'client_nbr', 'distance': 'mean_called_distance'})
+        )
+
+
+    @cached_property
+    def std_called_distance(self) -> cudf.DataFrame:
+        return (
+            self.cdr_lonlat
+            [['calling_nbr', 'called_nbr', 'distance']]
+            .groupby(['called_nbr'])['distance']
+            .std()
+            .reset_index()
+            .rename(columns={'called_nbr': 'client_nbr', 'distance': 'mean_called_distance'})
+        )
+
+
+
+
+    @cached_property
+    def mean_communication_distance(self):
+        return (
+            cudf.concat([
+                self.mean_calling_distance.rename(columns={'mean_calling_distance': 'distance'}),
+                self.mean_called_distance.rename(columns={'mean_called_distance': 'distance'})
+            ])
+            .groupby(['client_nbr'])['distance']
+            .mean()
+            .reset_index()
+            .rename(columns={'distance': 'mean_communication_distance'})
+        )
+
+
+    @cached_property
+    def std_communication_distance(self):
+        return (
+            cudf.concat([
+                self.std_calling_distance.rename(columns={'std_calling_distance': 'distance'}),
+                self.std_called_distance.rename(columns={'std_called_distance': 'distance'})
+            ])
+            .groupby(['client_nbr'])['distance']
+            .std()
+            .reset_index()
+            .rename(columns={'distance': 'std_communication_distance'})
         )
 
 
     def get_user_info(self,
-                      method = Literal['mean_client_distance', 'std_client_distance']):
+                      target = Literal['communication', 'calling', 'called'],
+                      method = Literal['mean', 'std']
+                     ) -> pd.DataFrame:
         user_info =  cudf.read_csv('data/processed/201308/clean_user_info.csv')
         match method:
-            case 'mean_client_distance':
-                return (
-                    self.mean_client_distance
-                    .merge(user_info, on='client_nbr')
-                )
-            case 'std_client_distance':
-                return (
-                    self.std_client_distance
-                    .merge(user_info, on='client_nbr')
-                )
+            case 'std':
+                match target:
+                    case 'calling':
+                        return (
+                            self.std_calling_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )
+                    case 'called':
+                        return (
+                            self.std_called_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )
+                    case _:
+                        return (
+                            self.std_communication_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )
+            case _:  # mean_client_distance
+                match target:
+                    case 'calling':
+                        return (
+                            self.mean_calling_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )
+                    case 'called':
+                        return (
+                            self.mean_called_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )
+                    case _:
+                        return (
+                            self.mean_communication_distance
+                            .merge(user_info, on='client_nbr')
+                            .to_pandas()
+                        )

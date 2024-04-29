@@ -2,6 +2,7 @@
 name = "telecom"
 version = "0.1.0"
 description = "telecom database analysis"
+package-mode = false
 authors = ["Hsiu-Hsuan Yeh"]
 readme = "README.md"
 

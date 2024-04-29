@@ -11,7 +11,7 @@ import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine, sql
 import time
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Literal
 from tqdm import tqdm
 
 
@@ -632,7 +632,7 @@ WHERE
 
  
 
-    def preprocess(self, strategy = 'csv') -> None:
+    def preprocess(self, strategy = Literal['mysql', 'csv']) -> None:
         match strategy:
             case 'mysql':
                 logger.info(f'create telecom.clean_cdr({self.month})')
@@ -643,7 +643,7 @@ WHERE
                 self.create_clean_user_info()
                 logger.info(f'aggregation')
                 self.aggregate()
-            case 'csv':
+            case _:
                 logger.info(f'create clean_cdr/({self.month})')
                 self.get_cdr_from_csv()
 

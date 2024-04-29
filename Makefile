@@ -1,4 +1,4 @@
-.PHONY: mysql build clean preprocess mlflow jupynium jupyter
+.PHONY: mysql build clean preprocess mlflow jupynium jupyter nvim
 
 
 mysql:
@@ -27,3 +27,7 @@ jupynium:
 
 jupyter:
 	docker compose run --rm --service-ports jupyter-notebook
+
+
+nvim:
+	docker compose run --rm --service-ports nvim

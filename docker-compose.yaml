@@ -50,6 +50,9 @@ services:
       - $PWD/cuda-12.2:/home/$DOCKER_USER/telecom/cuda-12.2
     command: jupyter notebook --ip 0.0.0.0 --port 8891 --no-browser --allow-root
     # command: ipython
+
+
+
   preprocess:
     image: 0jacky/telecom:env
     environment:
