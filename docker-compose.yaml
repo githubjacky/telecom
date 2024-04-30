@@ -48,7 +48,7 @@ services:
       - $PWD/src:/home/$DOCKER_USER/telecom/src
       - $PWD/report:/home/$DOCKER_USER/telecom/report
       - $PWD/cuda-12.2:/home/$DOCKER_USER/telecom/cuda-12.2
-    command: jupyter notebook --ip 0.0.0.0 --port 8891 --no-browser --allow-root
+    command: jupyter notebook --ip 0.0.0.0 --port 8891 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
     # command: ipython
 
 

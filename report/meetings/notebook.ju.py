@@ -30,8 +30,6 @@ driver = CallDistanceUtil()
 # %%
 user_info = driver.get_user_info(target='communication', method = 'mean')
 
-# %%
-list(user_info.columns)
 
 # %%
 import statsmodels.formula.api as smf
@@ -135,14 +133,14 @@ formula = """\
     mean_communication_distance ~ age + male_flag + tenure + \
         business_purpose_flag + smart_phone_flag + govern_worker_flag + \
         govern_cluster_flag + govern_industry_flag + 低端 + 超低端 + 超高端 + \
-        高端 + register_district:born_area\
+        高端 + C(register_district) + C(born_area)\
 """
-smf.ols(formula, data=data).fit(cov_type='HC0').summary()
+smf.ols(formula, data=data).fit(cov_type='HC0', use_t=True).summary()
 
 # %%
 def simple_encode_born_area_code(x):
     x_ = x // 100
-    
+
     match x_:
         case 5133:
             return '甘孜藏族自治州'
@@ -152,6 +150,8 @@ def simple_encode_born_area_code(x):
             return '已撤銷_眉山地区'
         case 6328:
             return '青海省海西蒙古族藏族自治州'
+       # case 3303:
+        #     return '浙江省温州市'
         case _:
             return '其他'
 
@@ -173,45 +173,47 @@ formula = """\
     mean_communication_distance ~ age + male_flag + tenure + \
         business_purpose_flag + smart_phone_flag + govern_worker_flag + \
         govern_cluster_flag + govern_industry_flag + 低端 + 超低端 + 超高端 + \
-        高端 + C(born_area):C(register_district)\
+        高端 + C(register_district) * C(born_area)\
 """
 (
     smf.ols(
         formula,
         data=data,
     )
-    .fit(cov_type='HC0')
+    .fit(cov_type='HC0', use_t=True)
     .summary()
 )
 
 # %%
-data = (
-    user_info[[
-        'age', 'male_flag', 'tenure', 'business_purpose_flag', 'smart_phone_flag',
-        'govern_worker_flag', 'govern_cluster_flag', 'govern_industry_flag',
-        'register_district', 'born_area', 'mean_communication_distance'
-    ]]
-    .join([
-        # compare to 中端
-        pd.get_dummies(user_info['phone_level'], drop_first=True),
-        pd.get_dummies(user_info['register_district']),
-        pd.get_dummies(user_info['born_area'])
-
-    ])
-)
 formula = """\
     mean_communication_distance ~ age + male_flag + tenure + \
         business_purpose_flag + smart_phone_flag + govern_worker_flag + \
         govern_cluster_flag + govern_industry_flag + 低端 + 超低端 + 超高端 + \
-        高端 + C(register_district) + C(born_area):C(register_district)\
+        高端 + C(register_district) * C(born_area)\
 """
-# (
-#     smf.ols(
-#         formula,
-#         data=data,
-#         drop_cols=['']
-#     )
-#     .fit(cov_type='HC0')
-#     .summary()
-# )
-
+(
+    smf.ols(
+        formula,
+        data=data,
+        drop_cols=[
+            'C(register_district)[T.什邡]:C(born_area)[T.凉山彝族自治州]',
+            'C(register_district)[T.广汉]:C(born_area)[T.凉山彝族自治州]',
+            'C(register_district)[T.绵竹]:C(born_area)[T.凉山彝族自治州]',
+            'C(register_district)[T.罗江]:C(born_area)[T.凉山彝族自治州]',
+            'C(register_district)[T.什邡]:C(born_area)[T.已撤銷_眉山地区]',
+            'C(register_district)[T.广汉]:C(born_area)[T.已撤銷_眉山地区]',
+            'C(register_district)[T.绵竹]:C(born_area)[T.已撤銷_眉山地区]',
+            'C(register_district)[T.罗江]:C(born_area)[T.已撤銷_眉山地区]',
+            'C(register_district)[T.广汉]:C(born_area)[T.甘孜藏族自治州]',
+            'C(register_district)[T.绵竹]:C(born_area)[T.甘孜藏族自治州]',
+            'C(register_district)[T.罗江]:C(born_area)[T.甘孜藏族自治州]',
+            'C(register_district)[T.德阳现业]:C(born_area)[T.甘孜藏族自治州]',
+            'C(register_district)[T.什邡]:C(born_area)[T.青海省海西蒙古族藏族自治州]',
+            'C(register_district)[T.广汉]:C(born_area)[T.青海省海西蒙古族藏族自治州]',
+            'C(register_district)[T.德阳现业]:C(born_area)[T.青海省海西蒙古族藏族自治州]',
+            'C(register_district)[T.绵竹]:C(born_area)[T.青海省海西蒙古族藏族自治州]'
+        ]
+    )
+    .fit(cov_type='HC0', use_t=True)
+    .summary()
+)
