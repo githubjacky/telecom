@@ -30,7 +30,6 @@ driver = CallDistanceUtil()
 # %%
 user_info = driver.get_user_info(target='communication', method = 'mean')
 
-
 # %%
 import statsmodels.formula.api as smf
 import pandas as pd
@@ -217,3 +216,4 @@ formula = """\
     .fit(cov_type='HC0', use_t=True)
     .summary()
 )
+

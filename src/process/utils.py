@@ -186,8 +186,8 @@ class CallDistanceUtil:
 
 
     def get_user_info(self,
-                      target = Literal['communication', 'calling', 'called'],
-                      method = Literal['mean', 'std']
+                      target: Literal['communication', 'calling', 'called'],
+                      method: Literal['mean', 'std']
                      ) -> pd.DataFrame:
         user_info =  cudf.read_csv('data/processed/201308/clean_user_info.csv')
         match method:
