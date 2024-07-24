@@ -1,6 +1,7 @@
 # raw data
 # data/
-data/raw
+data/cdr/
+data/user_info/
 
 env/
 env
