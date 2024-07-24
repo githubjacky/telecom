@@ -1,10 +1,7 @@
 # %% [markdown]
-"""
-A Demo to run jupyter notebook
-"""
+## Set up Multi-GPU
 
 # %%
-# connect to GPU
 from dask_cuda import LocalCUDACluster
 from dask.distributed import Client
 import dask
@@ -27,6 +24,8 @@ dask.config.set({"dataframe.backend": "cudf"})
 from src.process.utils import CallDistanceUtil
 driver = CallDistanceUtil()
 
+# %% [markdown]
+## Get the Communication Distance
 # %%
 user_info = driver.get_user_info(target='communication', method = 'mean')
 

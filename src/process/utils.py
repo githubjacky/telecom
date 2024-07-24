@@ -12,7 +12,8 @@ class CallDistanceUtil:
                  frequent_threshold: float = 0.5):
         self.cdr = dd.read_parquet(f'data/processed/2013{month}/cdr_loc')
 
-        # threshold to define the sample whose highest ratio of occurance are over this threshold
+        # consider a location is valid for a user if the occurance ratio of the most frequent locattion
+        # is higher than this threshold
         self.frequent_threshold = frequent_threshold
 
 
