@@ -4,12 +4,18 @@
     "SHELL":"/usr/bin/zsh",
     "GIT_EMAIL":"opottghjk00@gmail.com",
     "GIT_NAME":"Hsiu-Hsuan(Jacky) Yeh",
-    "PATH": "${containerEnv:PATH}:/root/.local/bin"
+    "PATH": "${containerEnv:PATH}:/root/.local/bin:/usr/local/cuda-12.4/bin",
+    "LD_LIBRARY_PATH": "${containerEnv:LD_LIBRARY_PATH}:/usr/local/cuda-12.4/targets/x86_64-linux/lib"
   },
   "mounts": [
     {
         "source": "${localEnv:HOME}/.ssh/known_hosts",
         "target": "/root/.ssh/known_hosts",
+        "type": "bind"
+    },
+    {
+        "source": "/usr/local/cuda-12.4",
+        "target": "/usr/local/cuda-12.4",
         "type": "bind"
     },
     {
