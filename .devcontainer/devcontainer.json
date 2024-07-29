@@ -42,7 +42,9 @@
       "version": "latest"
     }
   },
-  "image": "ubuntu:24.04",
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace/telecom",
   "runArgs": ["--gpus=all"],
   "postCreateCommand": [
     "sh",
