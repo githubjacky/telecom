@@ -4,6 +4,16 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ..:/workspace/telecom
-    # this command is referenced to https://github.com/loft-sh/devpod/issues/955#issue-2177966943
+      - ..:/telecom
+    # this command is referred to https://github.com/loft-sh/devpod/issues/955#issue-2177966943
     command: /bin/sh -c "trap :; TERM INT; sleep infinity & wait"
+
+
+  mage-ai:
+    image: mageai/mageai:latest
+    command: mage start --host=0.0.0.0  /telecom
+    ports:
+      - 6789:6789
+    volumes:
+      - ..:/telecom
+    restart: on-failure:5

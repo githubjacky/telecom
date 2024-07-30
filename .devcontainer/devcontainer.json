@@ -1,5 +1,6 @@
 {
   "name": "telecom",
+  "forwardPorts": ["mage-ai:6789"],
   "remoteEnv": {
     "SHELL":"/usr/bin/zsh",
     "GIT_EMAIL":"opottghjk00@gmail.com",
@@ -44,7 +45,7 @@
   },
   "dockerComposeFile": "docker-compose.yaml",
   "service": "devcontainer",
-  "workspaceFolder": "/workspace/telecom",
+  "workspaceFolder": "/telecom",
   "runArgs": ["--gpus=all"],
   "postCreateCommand": [
     "sh",
