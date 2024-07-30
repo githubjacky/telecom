@@ -1,35 +1,15 @@
 {
   "name": "telecom",
-  "forwardPorts": ["mage-ai:6789"],
+  "forwardPorts": [
+    "mage-ai:6789"
+  ],
   "remoteEnv": {
-    "SHELL":"/usr/bin/zsh",
-    "GIT_EMAIL":"opottghjk00@gmail.com",
-    "GIT_NAME":"Hsiu-Hsuan(Jacky) Yeh",
+    "SHELL": "/usr/bin/zsh",
+    "GIT_EMAIL": "opottghjk00@gmail.com",
+    "GIT_NAME": "Hsiu-Hsuan(Jacky) Yeh",
     "PATH": "${containerEnv:PATH}:/root/.local/bin:/usr/local/cuda-12.4/bin",
     "LD_LIBRARY_PATH": "${containerEnv:LD_LIBRARY_PATH}:/usr/local/cuda-12.4/targets/x86_64-linux/lib"
   },
-  "mounts": [
-    {
-        "source": "${localEnv:HOME}/.ssh/known_hosts",
-        "target": "/root/.ssh/known_hosts",
-        "type": "bind"
-    },
-    {
-        "source": "/usr/local/cuda-12.4",
-        "target": "/usr/local/cuda-12.4",
-        "type": "bind"
-    },
-    {
-        "source": "/home/mysql_output/node04/cdr/",
-        "target": "/workspaces/telecom/data/cdr",
-        "type": "bind"
-    },
-    {
-        "source": "/home/mysql_output/node04/user_info/",
-        "target": "/workspaces/telecom/data/user_info",
-        "type": "bind"
-    }
-  ],
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.11"
@@ -52,4 +32,3 @@
     "chmod +x .devcontainer/post-create-command.sh && ./.devcontainer/post-create-command.sh"
   ]
 }
-

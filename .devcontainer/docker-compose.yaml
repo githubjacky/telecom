@@ -1,4 +1,17 @@
-x-gpu-deploy: &gpu-deploy
+x-volume-deploy: &volume-deploy
+  volumes:
+    - type: bind
+      source: ..
+      target: /telecom
+    - type: bind
+      source: /home/mysql_output/node04/cdr/
+      target: /telecom/data/cdr
+    - type: bind
+      source: /home/mysql_output/node04/user_info/
+      target: /telecom/data/user_info
+    - type: bind
+      source: /usr/local/cuda-12.4
+      target: /usr/local/cuda-12.4
   deploy:
     resources:
       reservations:
@@ -10,22 +23,18 @@ x-gpu-deploy: &gpu-deploy
 
 services:
   devcontainer:
-    <<: *gpu-deploy
+    <<: *volume-deploy
     build:
       context: .
       dockerfile: Dockerfile
     # this command is referred to https://github.com/loft-sh/devpod/issues/955#issue-2177966943
     command: /bin/sh -c "trap :; TERM INT; sleep infinity & wait"
-    volumes:
-      - ..:/telecom
 
 
   mage-ai:
-    <<: *gpu-deploy
+    <<: *volume-deploy
     image: mageai/mageai:latest
     command: mage start --host=0.0.0.0  /telecom
     ports:
       - 6789:6789
-    volumes:
-      - ..:/telecom
     restart: on-failure:5
