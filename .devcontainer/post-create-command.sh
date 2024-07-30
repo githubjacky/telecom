@@ -33,7 +33,7 @@ fi
 
 # 5. setup terminal utils
 # replace with your own zsh config
-wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/1104447387f636fce47d2409e86367ce121b1dfa/setup.sh
+wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/c5a19e4ffc28c090b743c2512dfa29c5a4467577/setup.sh
 chmod +x setup.sh
 ./setup.sh
 rm -f setup.sh
