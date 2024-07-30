@@ -1,15 +1,27 @@
+x-gpu-deploy: &gpu-deploy
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 2
+            capabilities: [gpu]
+
+
 services:
   devcontainer:
+    <<: *gpu-deploy
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - ..:/telecom
     # this command is referred to https://github.com/loft-sh/devpod/issues/955#issue-2177966943
     command: /bin/sh -c "trap :; TERM INT; sleep infinity & wait"
+    volumes:
+      - ..:/telecom
 
 
   mage-ai:
+    <<: *gpu-deploy
     image: mageai/mageai:latest
     command: mage start --host=0.0.0.0  /telecom
     ports:

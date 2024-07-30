@@ -46,7 +46,6 @@
   "dockerComposeFile": "docker-compose.yaml",
   "service": "devcontainer",
   "workspaceFolder": "/telecom",
-  "runArgs": ["--gpus=all"],
   "postCreateCommand": [
     "sh",
     "-c",
