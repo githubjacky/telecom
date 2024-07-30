@@ -10,6 +10,7 @@
 # 1. git config
 git config --global user.email "$GIT_EMAIL"
 git config --global user.name "$GIT_NAME"
+git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
 # 2. setup lemonade client for copying from remote container to local computer
 if [ ! -d "$HOME"/.config ]; then
@@ -25,15 +26,14 @@ EOF
 git clone https://github.com/githubjacky/my-astronvim "$HOME"/.config/nvim
 
 # 4. install python dependencies
-if [ -f .devcontainer/requirements.txt ]; then
+if [ -f .devcontainer/requirements_devcontainer.txt ]; then
     uv pip install \
         --python /usr/local/python/current/bin/python \
-        -r .devcontainer/requirements.txt
+        -r .devcontainer/requirements_devcontainer.txt
 fi
 
 # 5. setup terminal utils
-# replace with your own zsh config
-wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/c5a19e4ffc28c090b743c2512dfa29c5a4467577/setup.sh
-chmod +x setup.sh
-./setup.sh
-rm -f setup.sh
+wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/b264c149d328d76fb195b9497bfeee650edd4df2/setup.sh &&
+    chmod +x setup.sh &&
+    ./setup.sh &&
+    rm -f setup.sh

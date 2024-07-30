@@ -12,4 +12,5 @@ COPY --from=build-lemonade /go/bin/lemonade /usr/local/bin
 # npm is required to install language server
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-        build-essential python3.12-venv npm unzip neovim
+        build-essential python3.12-venv npm unzip neovim wget
+
