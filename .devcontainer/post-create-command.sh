@@ -33,7 +33,7 @@ if [ -f .devcontainer/requirements_devcontainer.txt ]; then
 fi
 
 # 5. setup terminal utils
-wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/b264c149d328d76fb195b9497bfeee650edd4df2/setup.sh &&
+wget https://gist.githubusercontent.com/githubjacky/20882d09ed0dd5d659a6b5a1336edbe8/raw/6a813ec5d58a85df9768a0ebc7f3a14dc3096efc/setup.sh &&
     chmod +x setup.sh &&
     ./setup.sh &&
     rm -f setup.sh

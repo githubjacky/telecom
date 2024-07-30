@@ -26,9 +26,5 @@
   "dockerComposeFile": "docker-compose.yaml",
   "service": "devcontainer",
   "workspaceFolder": "/telecom",
-  "postCreateCommand": [
-    "sh",
-    "-c",
-    "chmod +x .devcontainer/post-create-command.sh && ./.devcontainer/post-create-command.sh"
-  ]
+  "postCreateCommand": "chmod +x .devcontainer/post-create-command.sh && ./.devcontainer/post-create-command.sh"
 }
