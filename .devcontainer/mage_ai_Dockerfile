@@ -1,5 +1,7 @@
 FROM mageai/mageai:latest
 
+ARG PYTHON_BIN=/usr/local/bin/python
+
 # the following code are copied from mage-ai: https://github.com/mage-ai/mage-ai/blob/master/integrations/spark/Dockerfile
 # Add Debian Bullseye repository
 RUN echo 'deb http://deb.debian.org/debian bullseye main' > /etc/apt/sources.list.d/bullseye.list
@@ -11,4 +13,5 @@ RUN apt-get update -y && \
 # Remove Debian Bullseye repository
 RUN rm /etc/apt/sources.list.d/bullseye.list
 
-RUN pip install pyspark
+RUN pip install uv && \
+    uv pip install --python ${PYTHON_BIN} pyspark
