@@ -26,7 +26,7 @@ services:
     <<: *volume-deploy
     build:
       context: .
-      dockerfile: Dockerfile/devcontainer
+      dockerfile: devcontainer_Dockerfile
     # this command is referred to https://github.com/loft-sh/devpod/issues/955#issue-2177966943
     command: /bin/sh -c "trap :; TERM INT; sleep infinity & wait"
 
@@ -35,7 +35,7 @@ services:
     <<: *volume-deploy
     build:
       context: .
-      dockerfile: Dockerfile/mage-ai
+      dockerfile: mage_ai_Dockerfile
     command:
       mage start --host=0.0.0.0  /telecom/src/process
     ports:

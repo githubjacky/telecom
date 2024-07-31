@@ -1,1 +1,0 @@
-FROM mageai/mageai:latest
